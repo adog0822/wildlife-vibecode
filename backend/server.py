@@ -1,9 +1,12 @@
-from fastapi import FastAPI, APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import os
 import json
 import logging
@@ -28,6 +31,12 @@ db = client[os.environ['DB_NAME']]
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
 
 app = FastAPI()
+
+# ============== RATE LIMITING (slowapi) ==============
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 api_router = APIRouter(prefix="/api")
 
 # ============== ANIMAL ENDPOINTS ==============
@@ -158,7 +167,8 @@ SAOLA_SYSTEM = """You are the Saola — a mythical, wise, and witty animal guide
 Never break character. Never reveal you are an AI."""
 
 @api_router.post("/saola/chat")
-async def saola_chat(req: SaolaChatRequest):
+@limiter.limit("5/minute")
+async def saola_chat(request: Request, req: SaolaChatRequest):
     # Streaming SSE-like response using emergentintegrations
     from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, StreamDone
 
@@ -604,7 +614,8 @@ async def get_biome_bg(biome_key: str):
     return {"url": url, "cached": False}
 
 @api_router.post("/biome_bg/regenerate/{biome_key}")
-async def regenerate_biome_bg(biome_key: str):
+@limiter.limit("2/minute")
+async def regenerate_biome_bg(request: Request, biome_key: str):
     if biome_key not in BIOME_PROMPTS:
         raise HTTPException(status_code=404, detail="Unknown biome")
     url = await _generate_biome_bg(biome_key, BIOME_PROMPTS[biome_key])
