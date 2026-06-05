@@ -27,6 +27,9 @@ body { font-family: 'Space Mono', monospace; -webkit-font-smoothing: antialiased
 @keyframes glow-pulse { 0%,100% { filter: drop-shadow(0 0 6px rgba(255,215,0,0.4)); } 50% { filter: drop-shadow(0 0 24px rgba(255,215,0,1)); } }
 @keyframes unroll { from { transform: scaleY(0.05); opacity: 0; } to { transform: scaleY(1); opacity:1; } }
 @keyframes burn-in { 0% { filter: blur(8px) brightness(2) sepia(1); opacity:0;} 60%{ filter: blur(2px) sepia(0.4); opacity:.9;} 100%{ filter:none; opacity:1;} }
+@keyframes haze-drift { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+@keyframes godray-sway { 0%,100% { opacity: 0.55; transform: translateX(0) skewX(-12deg); } 50% { opacity: 0.85; transform: translateX(30px) skewX(-10deg); } }
+@keyframes cloud-drift { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-1200px, 0, 0); } }
 
 .shake { animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both; }
 .float-y { animation: float-y 4s ease-in-out infinite; }

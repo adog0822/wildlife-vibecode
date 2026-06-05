@@ -123,7 +123,13 @@ async def saola_chat(req: SaolaChatRequest):
                 elif isinstance(ev, StreamDone):
                     break
         except Exception as e:
-            yield f"\n[The Saola hums quietly... ({type(e).__name__})]"
+            import traceback
+            logging.error(f"Saola chat error: {e}\n{traceback.format_exc()}")
+            msg = str(e).lower()
+            if "budget" in msg or "quota" in msg or "rate" in msg:
+                yield "The Saola lowers his lantern and bows his head... \"Forgive me, scholar. My voice grows thin tonight — the sanctuary's mystic wellspring runs low. Replenish the Universal Key (Profile → Universal Key → Add Balance), and I shall speak again.\""
+            else:
+                yield "The Saola hums quietly, gazing into the dusk... \"A gust took my words. Ask me again in a moment.\""
 
     return StreamingResponse(gen(), media_type="text/plain",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

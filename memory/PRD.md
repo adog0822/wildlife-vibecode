@@ -105,8 +105,21 @@ test their knowledge in trials, and bluff their way through cocktail-party multi
 - ✅ Fixed React crash `bgUrl is not defined` in `BiomeView.jsx` — resolved layered backgrounds (AI painterly as far layer, Unsplash photo as mid multiply-blend overlay)
 - ✅ Smoke-tested `/biome/savanna` — renders cleanly with AI background, hotspots, D-pad, minimap, header
 
+## Iteration 8 (2026-02-05 — Saola Chat Verified + Cinematic Biome Atmosphere)
+- ✅ **Saola Chat (Claude Sonnet 4.5)** end-to-end pipeline verified — `/api/saola/chat` SSE stream → `saolaStream` reader → `SaolaGuide.jsx` panel. Currently blocked **only by Universal Key budget exhaustion** (0.57 / 0.4); user must top up. In-character fallback message added so the experience stays magical when budget is low.
+- ✅ **Cinematic atmosphere layering in BiomeView** (no LLM cost, pure CSS):
+  - Distant accent halo (radial screen-blend)
+  - Stronger color grading (saturation 1.45, contrast 1.18) with hue-rotate at night
+  - Soft-light biome accent wash (warmth/coolness without crushing the painterly art)
+  - Volumetric god rays — two animated diagonal beams sway 9s/13s
+  - Slow-drifting haze band at the horizon (40s linear loop)
+  - Stronger fog gradient bottom + radial vignette (95% / 80% ellipse)
+  - SVG fractal-noise film grain overlay (12% opacity, overlay blend)
+- ✅ Mid Unsplash overlay opacity dropped to 0.14 (from 0.22) when AI bg present — lets painterly art shine through
+- ✅ Smoke-tested savanna (golden hour) + ocean (deep blue painterly) — both render with cinematic depth
+
 ## Pending / Next Up
-- 🟠 Saola Guide AI Chat (Claude Sonnet 4.5) — UI exists, no conversational backend yet
-- 🟡 Field Journalist Missions (LLM photo prompts in Photo Mode)
-- 🟢 Ecosystem Poker post-lobby gameplay polish (bluff reveal, board sync clarity)
-- 🧹 Refactor `BiomeView.jsx` (712 lines) into `BiomeCanvas`, `PhotoMode`, `DayNightController`, `BiomeAudio` modules
+- 🟠 **Top up Universal Key** so Saola can actually speak (Profile → Universal Key → Add Balance). Code is 100% ready.
+- 🟡 Field Journalist Missions (LLM photo prompts in Photo Mode) — requires budget
+- 🟢 Ecosystem Poker post-lobby gameplay polish (bluff reveal, board sync)
+- 🧹 Refactor `BiomeView.jsx` (now ~770 lines) into `BiomeCanvas`, `PhotoMode`, `DayNightController`, `BiomeAudio`

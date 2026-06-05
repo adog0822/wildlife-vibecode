@@ -460,7 +460,14 @@ const BiomeView = () => {
         {/* Sky */}
         <div className="absolute inset-0" style={{ background: biome.sky }} />
 
-        {/* Far background — slow parallax, sharp */}
+        {/* Distant atmospheric haze halo using biome accent — pure CSS, no LLM */}
+        <div className="absolute inset-0 pointer-events-none"
+             style={{
+               background: `radial-gradient(ellipse 80% 55% at 50% 62%, ${biome.accent}38 0%, ${biome.accent}10 40%, transparent 70%)`,
+               mixBlendMode: "screen",
+             }} />
+
+        {/* Far background — slow parallax, AI-painterly art, color-graded HARD */}
         <div className="absolute inset-y-0 left-0"
              style={{
                width: sceneW * 1.4, height: sceneH * 1.1,
@@ -468,10 +475,19 @@ const BiomeView = () => {
                backgroundSize: "cover", backgroundPosition: "center",
                transform: `translate3d(${cam.x * 0.35}px, ${cam.y * 0.5}px, 0)`,
                willChange: "transform",
-               filter: "saturate(1.15) contrast(1.05) brightness(0.92)",
+               filter: night
+                 ? "saturate(1.35) contrast(1.18) brightness(0.55) hue-rotate(210deg)"
+                 : "saturate(1.45) contrast(1.18) brightness(1.02)",
              }} />
 
-        {/* Mid photo overlay — adds real-world depth on top of painterly bg */}
+        {/* Biome accent color wash — pushes the AI art into a richer mood */}
+        <div className="absolute inset-0 pointer-events-none"
+             style={{
+               background: `linear-gradient(180deg, ${biome.accent}26 0%, transparent 35%, ${biome.accentDeep}40 100%)`,
+               mixBlendMode: night ? "multiply" : "soft-light",
+             }} />
+
+        {/* Mid photo overlay — adds real-world depth on top of painterly bg (subtle when AI bg present) */}
         <div className="absolute inset-y-0 left-0"
              style={{
                width: sceneW * 1.15, height: sceneH * 1.05,
@@ -479,26 +495,73 @@ const BiomeView = () => {
                backgroundSize: "cover", backgroundPosition: "40% 60%",
                transform: `translate3d(${cam.x * 0.6}px, ${cam.y * 0.65}px, 0) scale(1.1)`,
                willChange: "transform",
-               opacity: aiBg ? 0.22 : 0.35,
-               mixBlendMode: "multiply",
+               opacity: aiBg ? 0.14 : 0.32,
+               mixBlendMode: "soft-light",
+               filter: "saturate(0.85)",
              }} />
 
-        {/* Depth fog gradient */}
+        {/* Volumetric god rays — diagonal beams of light from above (day only) */}
+        {!night && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute -top-1/4 left-1/4 w-[60%] h-[160%]"
+                 style={{
+                   background: `linear-gradient(105deg, transparent 35%, ${biome.accent}33 50%, transparent 65%)`,
+                   mixBlendMode: "screen",
+                   filter: "blur(20px)",
+                   animation: "godray-sway 9s ease-in-out infinite",
+                   transformOrigin: "top center",
+                 }} />
+            <div className="absolute -top-1/4 left-1/2 w-[40%] h-[160%]"
+                 style={{
+                   background: `linear-gradient(115deg, transparent 40%, #fff5d633 55%, transparent 70%)`,
+                   mixBlendMode: "screen",
+                   filter: "blur(28px)",
+                   animation: "godray-sway 13s ease-in-out -3s infinite",
+                 }} />
+          </div>
+        )}
+
+        {/* Drifting haze band — slow ambient movement near the horizon */}
+        <div className="absolute inset-x-0 pointer-events-none"
+             style={{
+               top: "38%", height: "26%",
+               backgroundImage: `linear-gradient(90deg, transparent 0%, ${biome.accent}30 25%, transparent 50%, ${biome.accentDeep}26 75%, transparent 100%)`,
+               backgroundSize: "200% 100%",
+               mixBlendMode: night ? "screen" : "overlay",
+               animation: "haze-drift 40s linear infinite",
+               filter: "blur(12px)",
+               opacity: 0.7,
+             }} />
+
+        {/* Depth fog gradient (stronger now) */}
         <div className="absolute inset-0 pointer-events-none"
-             style={{ background: `linear-gradient(180deg, ${biome.accentDeep}00 0%, ${biome.accentDeep}1a 70%, ${biome.accentDeep}4a 100%)` }} />
+             style={{ background: `linear-gradient(180deg, ${biome.accentDeep}00 0%, ${biome.accentDeep}26 65%, ${biome.accentDeep}70 100%)` }} />
 
         {/* Day/Night global overlay */}
         <div className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
              style={{
                background: night
-                 ? "radial-gradient(circle at 50% 20%, rgba(120,140,200,0.18) 0%, rgba(8,12,28,0.65) 100%)"
-                 : "radial-gradient(circle at 50% 20%, rgba(255,230,180,0.10) 0%, transparent 70%)",
+                 ? "radial-gradient(circle at 50% 20%, rgba(120,140,200,0.18) 0%, rgba(8,12,28,0.72) 100%)"
+                 : "radial-gradient(circle at 50% 20%, rgba(255,230,180,0.14) 0%, transparent 70%)",
                mixBlendMode: night ? "multiply" : "screen",
              }} />
         {/* moonlight or sunlight tint over scene image */}
         <div className="absolute inset-0 pointer-events-none"
-             style={{ background: night ? "rgba(20,30,60,0.35)" : "rgba(255,200,140,0.05)",
+             style={{ background: night ? "rgba(20,30,60,0.35)" : "rgba(255,200,140,0.06)",
                       mixBlendMode: "overlay" }} />
+
+        {/* Cinematic vignette — strong corner darkening for NatGeo feel */}
+        <div className="absolute inset-0 pointer-events-none"
+             style={{
+               background: "radial-gradient(ellipse 95% 80% at 50% 55%, transparent 55%, rgba(0,0,0,0.55) 100%)",
+             }} />
+
+        {/* Film grain — SVG fractal noise overlay for tactile texture */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.12] mix-blend-overlay"
+             style={{
+               backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.85'/></svg>\")",
+               backgroundSize: "260px 260px",
+             }} />
 
         {/* Foreground — NatGeo wildlife crossing + hotspots */}
         <div className="absolute inset-y-0 left-0"
