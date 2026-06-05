@@ -352,3 +352,39 @@ export const playFootstep = () => {
   src.connect(filt); filt.connect(g); g.connect(ac.destination);
   src.start();
 };
+
+// === Per-animal call SFX (triggered on hotspot hover) ===
+// Maps to category-specific calls using existing event generators.
+export const playAnimalCall = (animal) => {
+  if (isMuted()) return;
+  const ac = getCtx(); if (!ac) return;
+  const n = (animal.name || "").toLowerCase();
+  if (n.includes("whale") || n.includes("dolphin")) return triggerEventExport(ac, "whale");
+  if (n.includes("lion") || n.includes("tiger")) return triggerEventExport(ac, "roar");
+  if (n.includes("eagle") || n.includes("hawk") || n.includes("falcon") || n.includes("condor") || n.includes("vulture")) return triggerEventExport(ac, "eagle");
+  if (n.includes("owl")) return triggerEventExport(ac, "owl");
+  if (n.includes("penguin")) return triggerEventExport(ac, "penguin");
+  if (n.includes("kookaburra")) return triggerEventExport(ac, "kookaburra");
+  if (n.includes("monkey") || n.includes("mandrill") || n.includes("howler") || n.includes("chimp") || n.includes("orang")) return triggerEventExport(ac, "monkey");
+  if (n.includes("snake") || n.includes("cobra") || n.includes("viper") || n.includes("python") || n.includes("anaconda")) return triggerEventExport(ac, "scratch");
+  if (n.includes("shark") || n.includes("squid") || n.includes("ray") || n.includes("fish")) return triggerEventExport(ac, "sonar");
+  if (n.includes("crocodile") || n.includes("caiman") || n.includes("gharial")) return triggerEventExport(ac, "roar");
+  if (n.includes("elephant")) { const o = ac.createOscillator(); const g = ac.createGain();
+    o.type = "sawtooth"; o.frequency.setValueAtTime(80, ac.currentTime);
+    o.frequency.linearRampToValueAtTime(220, ac.currentTime + 0.6);
+    o.frequency.linearRampToValueAtTime(60, ac.currentTime + 1.0);
+    g.gain.setValueAtTime(0, ac.currentTime); g.gain.linearRampToValueAtTime(0.15, ac.currentTime + 0.1);
+    g.gain.linearRampToValueAtTime(0, ac.currentTime + 1.1);
+    o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + 1.2); return; }
+  if (n.includes("frog") || n.includes("toad")) { for (let i=0;i<3;i++) setTimeout(()=>{
+    const o = ac.createOscillator(); const g = ac.createGain();
+    o.type = "square"; o.frequency.value = 200; o.detune.value = -50;
+    g.gain.setValueAtTime(0.08, ac.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.15);
+    o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + 0.2);
+  }, i*180); return; }
+  // default — pleasant bird chirp
+  triggerEventExport(ac, "bird");
+};
+
+// expose the internal event trigger for hover calls
+const triggerEventExport = (ac, kind) => triggerEvent(ac, kind);

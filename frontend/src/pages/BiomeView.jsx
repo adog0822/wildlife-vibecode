@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { toPng } from "html-to-image";
 import { fetchAnimals } from "../lib/api";
 import { getWikiImage } from "../lib/wikiImage";
 import { isUnlocked, unlock } from "../lib/storage";
-import { startAmbient, stopAmbient, playUnlock, playChi, playFootstep } from "../lib/sfx";
+import { startAmbient, stopAmbient, playUnlock, playChi, playFootstep, playAnimalCall } from "../lib/sfx";
 import { setSaolaMood } from "../lib/saolaBus";
 import SaolaGuide from "../components/SaolaGuide";
 
@@ -64,17 +65,61 @@ const BIOMES = {
 const hashCode = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = ((h<<5)-h) + s.charCodeAt(i); return Math.abs(h); };
 const SCENE_W = 8000, SCENE_H = 3000;
 
-// NatGeo-style moving wildlife — small cropped real animal images that cross the scene
-const SafariWildlife = ({ biome, sceneW, sceneH }) => {
+// Expanded NatGeo-style safari wildlife rosters per biome
+const SafariWildlife = ({ biome, sceneW, sceneH, night }) => {
   const safari = {
-    savanna: [{ wiki: "Lion", top: 70 }, { wiki: "Plains zebra", top: 72 }, { wiki: "Common warthog", top: 78 }, { wiki: "Masai giraffe", top: 55 }],
-    dunes: [{ wiki: "Fennec fox", top: 75 }, { wiki: "Dromedary", top: 70 }],
-    canopy: [{ wiki: "Toucan", top: 25, kind: "fly" }, { wiki: "Mandrill", top: 70 }, { wiki: "Scarlet macaw", top: 20, kind: "fly" }],
-    peaks: [{ wiki: "Andean condor", top: 18, kind: "fly" }, { wiki: "Domestic yak", top: 78 }],
-    woods: [{ wiki: "Red deer", top: 75 }, { wiki: "Red fox", top: 80 }],
-    outback: [{ wiki: "Red kangaroo", top: 72, kind: "hop" }, { wiki: "Emu", top: 75 }],
-    wastes: [{ wiki: "Emperor penguin", top: 80, kind: "waddle" }, { wiki: "Adélie penguin", top: 82, kind: "waddle" }],
-    ocean: [{ wiki: "Manta ray", top: 50, kind: "swim" }, { wiki: "Humpback whale", top: 55, kind: "swim" }, { wiki: "Common dolphin", top: 35, kind: "swim" }],
+    savanna: [
+      { wiki: "Lion", top: 70 }, { wiki: "Plains zebra", top: 72 },
+      { wiki: "Common warthog", top: 78 }, { wiki: "Masai giraffe", top: 55 },
+      { wiki: "African bush elephant", top: 65 }, { wiki: "Cheetah", top: 74 },
+      { wiki: "Meerkat", top: 80 }, { wiki: "Wildebeest", top: 72 },
+      { wiki: "Spotted hyena", top: 76 }, { wiki: "African wild dog", top: 75 },
+    ],
+    dunes: [
+      { wiki: "Fennec fox", top: 75 }, { wiki: "Dromedary", top: 70 },
+      { wiki: "Arabian oryx", top: 72 }, { wiki: "Sand cat", top: 78 },
+      { wiki: "Egyptian vulture", top: 25, kind: "fly" },
+      { wiki: "Caracal", top: 76 },
+    ],
+    canopy: [
+      { wiki: "Toucan", top: 25, kind: "fly" }, { wiki: "Mandrill", top: 70 },
+      { wiki: "Scarlet macaw", top: 20, kind: "fly" }, { wiki: "Jaguar", top: 75 },
+      { wiki: "Howler monkey", top: 35 }, { wiki: "Brown-throated sloth", top: 28 },
+      { wiki: "Western lowland gorilla", top: 72 }, { wiki: "Capybara", top: 80 },
+      { wiki: "Orangutan", top: 32 },
+    ],
+    peaks: [
+      { wiki: "Andean condor", top: 18, kind: "fly" }, { wiki: "Domestic yak", top: 78 },
+      { wiki: "Snow leopard", top: 70 }, { wiki: "Red panda", top: 35 },
+      { wiki: "Markhor", top: 74 }, { wiki: "Pallas's cat", top: 80 },
+      { wiki: "Llama", top: 76 },
+    ],
+    woods: [
+      { wiki: "Red deer", top: 75 }, { wiki: "Red fox", top: 80 },
+      { wiki: "Brown bear", top: 72 }, { wiki: "Eurasian wolf", top: 76 },
+      { wiki: "Eurasian eagle-owl", top: 25, kind: "fly" },
+      { wiki: "Eurasian wild boar", top: 78 }, { wiki: "Red squirrel", top: 60 },
+      { wiki: "European hedgehog", top: 82 },
+    ],
+    outback: [
+      { wiki: "Red kangaroo", top: 72, kind: "hop" }, { wiki: "Emu", top: 75 },
+      { wiki: "Koala", top: 30 }, { wiki: "Tasmanian devil", top: 78 },
+      { wiki: "Wedge-tailed eagle", top: 18, kind: "fly" },
+      { wiki: "Wombat", top: 80 }, { wiki: "Laughing kookaburra", top: 22, kind: "fly" },
+      { wiki: "Dingo", top: 76 },
+    ],
+    wastes: [
+      { wiki: "Emperor penguin", top: 80, kind: "waddle" }, { wiki: "Adélie penguin", top: 82, kind: "waddle" },
+      { wiki: "Polar bear", top: 75 }, { wiki: "Arctic fox", top: 78 },
+      { wiki: "Reindeer", top: 72 }, { wiki: "Snowy owl", top: 22, kind: "fly" },
+      { wiki: "Leopard seal", top: 85 },
+    ],
+    ocean: [
+      { wiki: "Manta ray", top: 50, kind: "swim" }, { wiki: "Humpback whale", top: 55, kind: "swim" },
+      { wiki: "Common dolphin", top: 35, kind: "swim" }, { wiki: "Blue whale", top: 60, kind: "swim" },
+      { wiki: "Great white shark", top: 45, kind: "swim" }, { wiki: "Whale shark", top: 52, kind: "swim" },
+      { wiki: "Orca", top: 40, kind: "swim" }, { wiki: "Leatherback sea turtle", top: 65, kind: "swim" },
+    ],
   };
   const list = safari[biome] || [];
   const [imgs, setImgs] = useState({});
@@ -86,8 +131,8 @@ const SafariWildlife = ({ biome, sceneW, sceneH }) => {
   }, [biome]); // eslint-disable-line
 
   return list.map((s, i) => {
-    const delay = i * 6 + (i % 3);
-    const duration = 35 + (i * 4);
+    const delay = i * 4 + (i % 3);
+    const duration = 28 + (i * 3);
     const yMove = s.kind === "hop" ? [0, -50, 0, -40, 0]
                  : s.kind === "fly" ? [0, -20, 10, -10, 0]
                  : s.kind === "swim" ? [0, 25, -15, 10, 0]
@@ -95,8 +140,9 @@ const SafariWildlife = ({ biome, sceneW, sceneH }) => {
                  : [0, -3, 0, -3, 0];
     return (
       <motion.div key={i} className="absolute pointer-events-none"
-        style={{ top: `${s.top}%`, filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.6))" }}
-        initial={{ x: -180 }} animate={{ x: sceneW + 180, y: yMove }}
+        style={{ top: `${s.top}%`,
+                 filter: `drop-shadow(0 6px 12px rgba(0,0,0,0.6)) ${night ? "brightness(0.55) saturate(0.7) hue-rotate(20deg)" : ""}` }}
+        initial={{ x: -200 }} animate={{ x: sceneW + 200, y: yMove }}
         transition={{ duration, repeat: Infinity, delay, ease: "linear",
                       y: { duration: s.kind === "hop" ? 1.0 : 4, repeat: Infinity }}}>
         {imgs[s.wiki] && (
@@ -134,7 +180,13 @@ const BiomeView = () => {
   const [hoveredId, setHoveredId] = useState(null);
   const [showHint, setShowHint] = useState(true);
   const [zoom, setZoom] = useState(1.0);
+  const [night, setNight] = useState(() => {
+    const h = new Date().getHours();
+    return h < 6 || h >= 19;
+  });
+  const [photoMode, setPhotoMode] = useState(false);
   const [vp, setVp] = useState({ w: window.innerWidth, h: window.innerHeight });
+  const sceneRef = useRef(null);
 
   // CAMERA: target = where we want to be, actual tweens toward it each frame
   const targetRef = useRef({ x: 0, y: 0 });
@@ -237,6 +289,9 @@ const BiomeView = () => {
       else if (k === "arrowdown" || k === "s") set("down", true);
       else if (k === "+" || k === "=") setZoom(z => Math.min(2.5, z + 0.15));
       else if (k === "-" || k === "_") setZoom(z => Math.max(0.7, z - 0.15));
+      else if (k === "p") setPhotoMode(p => !p);
+      else if (k === "n") setNight(n => !n);
+      else if (k === "escape") setPhotoMode(false);
       else return;
       setShowHint(false);
     };
@@ -282,6 +337,25 @@ const BiomeView = () => {
   };
   const inspect = (a) => { setRevealed(null); navigate(`/animal/${a.id}`); };
 
+  // Snap photo: capture viewport as PNG (Field Journal save + download)
+  const snapPhoto = async () => {
+    if (!sceneRef.current) return;
+    try {
+      const dataUrl = await toPng(sceneRef.current, { pixelRatio: 2, cacheBust: true });
+      const link = document.createElement("a");
+      link.download = `loxelife-${key}-${Date.now()}.png`;
+      link.href = dataUrl;
+      link.click();
+      try {
+        const journal = JSON.parse(localStorage.getItem("field.journal") || "[]");
+        journal.unshift({ biome: key, label: biome.label, at: Date.now() });
+        localStorage.setItem("field.journal", JSON.stringify(journal.slice(0, 12)));
+      } catch {}
+      playUnlock();
+      setSaolaMood("lanternFlare", 1500);
+    } catch (e) { console.warn("photo:", e); }
+  };
+
   // Pan to a hotspot when clicked from minimap
   const panToHotspot = (h) => {
     const target = clamp(-(h.x * zoom) + vp.w/2, -(h.y * zoom) + vp.h/2);
@@ -297,7 +371,8 @@ const BiomeView = () => {
       initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}
       style={{ background: biome.sky }}>
 
-      {/* Header */}
+      {/* Header — hidden in photo mode */}
+      {!photoMode && (
       <div className="absolute top-0 left-0 right-0 z-30 px-3 md:px-6 py-3 flex items-center justify-between gap-2"
            style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.78), transparent)" }}>
         <button onClick={() => navigate("/map")} className="btn-wood text-xs md:text-sm" data-testid="biome-back">← Atlas</button>
@@ -307,12 +382,26 @@ const BiomeView = () => {
                data-testid="biome-title">{biome.label}</div>
           <div className="font-['Cinzel'] italic text-[10px] md:text-sm text-[#f4efe6]/85 truncate">{biome.tagline}</div>
         </div>
-        <button onClick={() => navigate(`/region/${key}`)} className="btn-chi text-xs md:text-sm shrink-0" data-testid="open-region-loxedex">
-          Loxedex
-        </button>
+        <div className="flex gap-2 shrink-0">
+          <button onClick={() => setNight(n => !n)}
+                  className="bg-black/60 border border-white/20 rounded-full w-9 h-9 flex items-center justify-center text-[#f4efe6] hover:bg-black/80 text-base"
+                  title={night ? "Switch to day" : "Switch to night"}
+                  data-testid="day-night-toggle">
+            {night ? "☀" : "☾"}
+          </button>
+          <button onClick={() => setPhotoMode(true)}
+                  className="bg-black/60 border border-white/20 rounded-full w-9 h-9 flex items-center justify-center text-[#f4efe6] hover:bg-black/80 text-sm"
+                  title="Photo mode (P)"
+                  data-testid="photo-mode-enter">📸</button>
+          <button onClick={() => navigate(`/region/${key}`)} className="btn-chi text-xs md:text-sm" data-testid="open-region-loxedex">
+            Loxedex
+          </button>
+        </div>
       </div>
+      )}
 
       {/* Discovery counter */}
+      {!photoMode && (
       <div className="absolute top-16 md:top-20 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/65 border border-white/20 rounded-full px-3 py-1 backdrop-blur-sm"
            data-testid="biome-discovery-counter">
         <div className="w-3 h-3 rounded-full glow-pulse" style={{ background: biome.accent, boxShadow: `0 0 12px ${biome.accent}` }} />
@@ -320,6 +409,7 @@ const BiomeView = () => {
           {discovered.size} / {animals.length} discovered
         </span>
       </div>
+      )}
 
       {/* Hint */}
       <AnimatePresence>
@@ -335,7 +425,8 @@ const BiomeView = () => {
       </AnimatePresence>
 
       {/* SCENE */}
-      <div onMouseDown={(e) => startDrag(e.clientX, e.clientY)}
+      <div ref={sceneRef}
+           onMouseDown={(e) => startDrag(e.clientX, e.clientY)}
            onMouseMove={(e) => moveDrag(e.clientX, e.clientY)}
            onMouseUp={endDrag} onMouseLeave={endDrag}
            onTouchStart={(e) => e.touches.length === 1 && startDrag(e.touches[0].clientX, e.touches[0].clientY)}
@@ -375,12 +466,25 @@ const BiomeView = () => {
         <div className="absolute inset-0 pointer-events-none"
              style={{ background: `linear-gradient(180deg, ${biome.accentDeep}00 0%, ${biome.accentDeep}1a 70%, ${biome.accentDeep}4a 100%)` }} />
 
+        {/* Day/Night global overlay */}
+        <div className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
+             style={{
+               background: night
+                 ? "radial-gradient(circle at 50% 20%, rgba(120,140,200,0.18) 0%, rgba(8,12,28,0.65) 100%)"
+                 : "radial-gradient(circle at 50% 20%, rgba(255,230,180,0.10) 0%, transparent 70%)",
+               mixBlendMode: night ? "multiply" : "screen",
+             }} />
+        {/* moonlight or sunlight tint over scene image */}
+        <div className="absolute inset-0 pointer-events-none"
+             style={{ background: night ? "rgba(20,30,60,0.35)" : "rgba(255,200,140,0.05)",
+                      mixBlendMode: "overlay" }} />
+
         {/* Foreground — NatGeo wildlife crossing + hotspots */}
         <div className="absolute inset-y-0 left-0"
              style={{ width: sceneW, height: sceneH, transform: `translate3d(${cam.x}px, ${cam.y}px, 0)`, willChange: "transform" }}>
 
           {/* Live NatGeo wildlife crossing through scene */}
-          <SafariWildlife biome={key} sceneW={sceneW} sceneH={sceneH} />
+          <SafariWildlife biome={key} sceneW={sceneW} sceneH={sceneH} night={night} />
 
           {/* Hotspots — silhouette-to-photo morph on hover */}
           {hotspots.map((h) => {
@@ -394,7 +498,7 @@ const BiomeView = () => {
             const showColor = isHover || disc || isRev;
             return (
               <motion.button key={h.a.id}
-                onMouseEnter={() => setHoveredId(h.a.id)}
+                onMouseEnter={() => { setHoveredId(h.a.id); playAnimalCall(h.a); }}
                 onMouseLeave={() => setHoveredId(null)}
                 onClick={() => handleHotspot(h)}
                 className="absolute -translate-x-1/2 -translate-y-1/2 group"
@@ -455,7 +559,8 @@ const BiomeView = () => {
              style={{ background: "radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.72) 100%)" }} />
       </div>
 
-      {/* D-PAD directional buttons — bottom-left */}
+      {/* D-PAD directional buttons — bottom-left, hidden in photo mode */}
+      {!photoMode && (
       <div className="absolute bottom-24 left-3 z-30 grid grid-cols-3 gap-1" data-testid="dpad">
         <div />
         <button onMouseDown={dirHold("up", true)} onMouseUp={dirHold("up", false)} onMouseLeave={dirHold("up", false)}
@@ -475,8 +580,10 @@ const BiomeView = () => {
                 className="bg-black/70 border border-white/20 rounded w-12 h-12 text-[#f4efe6] hover:bg-black/90 font-bold backdrop-blur-sm" data-testid="dpad-down">↓</button>
         <div />
       </div>
+      )}
 
-      {/* Zoom buttons — right */}
+      {/* Zoom buttons — right, hidden in photo mode */}
+      {!photoMode && (
       <div className="absolute right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-2" data-testid="zoom-controls">
         <button onClick={() => setZoom(z => Math.min(2.5, z + 0.15))}
                 className="bg-black/70 border border-white/20 rounded w-12 h-12 text-[#f4efe6] hover:bg-black/90 font-bold text-2xl backdrop-blur-sm" data-testid="zoom-in">+</button>
@@ -484,8 +591,30 @@ const BiomeView = () => {
         <button onClick={() => setZoom(z => Math.max(0.7, z - 0.15))}
                 className="bg-black/70 border border-white/20 rounded w-12 h-12 text-[#f4efe6] hover:bg-black/90 font-bold text-2xl backdrop-blur-sm" data-testid="zoom-out">−</button>
       </div>
+      )}
 
-      {/* Minimap — click to jump */}
+      {/* PHOTO MODE OVERLAY — frame + snap button */}
+      {photoMode && (
+        <>
+          {/* Polaroid-style frame */}
+          <div className="absolute inset-0 z-40 pointer-events-none"
+               style={{ border: "30px solid #F4EFE6", boxShadow: "inset 0 0 60px rgba(0,0,0,0.6)" }} />
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 font-['Bebas_Neue'] tracking-[0.4em] text-sm text-[#2C241B] bg-[#F4EFE6] px-4 py-1 rounded shadow">
+            📸 PHOTO MODE · {biome.label}
+          </div>
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex gap-3">
+            <button onClick={snapPhoto}
+                    className="bg-[#F4EFE6] text-[#2C241B] px-6 py-3 rounded font-['Bebas_Neue'] tracking-widest hover:bg-white shadow-lg"
+                    data-testid="snap-photo">CAPTURE</button>
+            <button onClick={() => setPhotoMode(false)}
+                    className="bg-black/70 text-[#f4efe6] border border-white/30 px-6 py-3 rounded font-['Bebas_Neue'] tracking-widest hover:bg-black/90"
+                    data-testid="photo-mode-exit">EXIT (Esc)</button>
+          </div>
+        </>
+      )}
+
+      {/* Minimap — hidden in photo mode */}
+      {!photoMode && (
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 bg-black/70 border border-white/20 rounded backdrop-blur-sm overflow-hidden cursor-pointer"
            style={{ width: mmW, height: mmH }} data-testid="biome-minimap"
            onClick={(e) => {
@@ -512,6 +641,12 @@ const BiomeView = () => {
                borderColor: biome.accent, background: `${biome.accent}20`,
              }} />
       </div>
+      )}
+
+      {/* Discovery counter — only when not in photo mode */}
+      {!photoMode && (
+        <div className="absolute top-16 md:top-20 left-1/2 -translate-x-1/2 z-30 hidden" />
+      )}
 
       {/* Revealed card */}
       <AnimatePresence>
@@ -551,7 +686,7 @@ const BiomeView = () => {
         )}
       </AnimatePresence>
 
-      <SaolaGuide context={`exploring the ${biome.label}`} />
+      {!photoMode && <SaolaGuide context={`exploring the ${biome.label}`} />}
     </motion.div>
   );
 };

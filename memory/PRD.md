@@ -87,3 +87,14 @@ test their knowledge in trials, and bluff their way through cocktail-party multi
 - ✅ **All hotspots reachable** — initial camera centered, full 8000×3000 scene navigable in all 4 directions
 - ✅ Fixed `navigator.share` AbortError silently ignored on user-cancel (Animal Detail share + Poker copy-link)
 - ✅ Poker: Always-visible Start button (disabled w/ player-count message), live join-pop animation + chi sound on join, ROLE banner (Warden vs Saboteur), HOW TO WIN cheat-sheet in lobby
+
+## Iteration 6 (2026-02-05 — Final Polish: Day/Night + Photo Mode + Animal Calls + Expanded Wildlife)
+- ✅ **Day/Night toggle** in biome header (☀/☾ button) — applies blue moonlight overlay or warm sun tint, dims wildlife silhouettes at night with hue-rotate. Press N or click toggle.
+- ✅ **Photo Mode** (📸 button or P key) — hides ALL UI overlay (header, D-pad, zoom, minimap, Saola, counter), wraps viewport in white polaroid frame, shows CAPTURE + EXIT (ESC) buttons. CAPTURE uses html-to-image to save PNG to disk + Field Journal (last 12 photos in localStorage).
+- ✅ **Animal call SFX on hover** — `playAnimalCall(animal)` triggers species-appropriate call: whale moans for cetaceans, lion roar for big cats, owl hoots for owls, kookaburra laugh for kookaburra, monkey howls for primates, frog croaks, elephant trumpet, eagle screech, bird chirps as default
+- ✅ **Expanded NatGeo wildlife rosters** — 7-10 unique cropped animal photos cross each biome scene (was 2-4): Savanna now has lions/zebras/warthogs/giraffes/elephants/cheetahs/meerkats/wildebeest/hyenas/wild dogs; Ocean has dolphins/whales/manta rays/blue whales/great whites/whale sharks/orcas/leatherback turtles
+- ✅ Fixed `snapPhoto` reference scoping bug
+
+## Deferred to Future
+- AI-generated painterly biome backgrounds via Gemini Nano Banana (requires backend image-gen pipeline + storage)
+- Public multiplayer Sanctuary leaderboard (Mongo collection + endpoint)
