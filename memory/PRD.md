@@ -126,6 +126,25 @@ test their knowledge in trials, and bluff their way through cocktail-party multi
   - New "⟁ YOUR TURN — pick a tile & slide it face-down ⟁" pulse banner shows for the active player during `playing` state
 - ✅ Testing agent verified backend + frontend 100% pass. Backend pytest at `/app/backend/tests/test_saola_chat.py`.
 
+## Iteration 10 (2026-02-05 — Madagascar × NatGeo Biome Rebuild + Global Leaderboard)
+- ✅ **All 8 biome backgrounds REGENERATED** with a brand-new prompt: "mid-to-far landscape, NO foreground objects, bold cel-shaded illustration with thick black ink outlines, deep saturated palette, Madagascar movie style × National Geographic cinematic lighting, lower-third empty". Updated system_message to match. Result: bold ink-outlined cel-shaded art with empty lower-third (no more dominating painted trees/branches crowding the view).
+- ✅ **Per-biome SVG foreground silhouette parallax layer** (`FG_SVG_STR` in BiomeView.jsx) — tiled 1600px-wide cel-shaded silhouettes anchored at viewport bottom, parallax 1.0× (vs bg 0.35×) for true diorama depth. Each biome gets unique shapes:
+  - savanna: rolling hills + grass tufts
+  - dunes: layered dune ridges
+  - canopy: jungle treeline + ferns
+  - peaks: jet-black mountain silhouettes
+  - woods: birch trunks + leaf litter
+  - outback: red ground + spinifex
+  - wastes: ice ridges + crystals
+  - ocean: sand floor + coral/kelp
+- ✅ **Scholar's Trial Global Leaderboard** — Mongo-backed `db.leaderboard` collection, auto-seeded on first GET with 10 mythic scholars (Charles D./Jane G./David A./Sir Lonesome/Audubon/Tashi/Captain Calypso/Saola Apprentice/Field Cadet/Curious Scholar).
+  - `GET /api/leaderboard?limit=N` returns top-N sorted by score desc
+  - `POST /api/leaderboard` records a new submission and returns the new top-10
+  - Frontend `/scholar/leaderboard` page shows the "SANCTUARY HALL OF SCHOLARS" parchment card above personal records, with medals (🥇🥈🥉) and biome tags
+  - Singleplayer auto-submits the player's streak on game-over
+- ✅ Testing agent iter2: 100% backend (10/10 pytest pass), 100% frontend. Found+fixed ObjectId serialization bug in POST /api/leaderboard. New regression suite at `/app/backend/tests/test_leaderboard.py`.
+
+
 ## Pending / Next Up
 - 🟡 Field Journalist Missions (LLM photo prompts in Photo Mode) — **deferred at user's request**
 - 🧹 Refactor `Poker.jsx` (~382 lines) and `server.py` (~590 lines: split poker logic to `poker.py`)
