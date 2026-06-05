@@ -1,0 +1,126 @@
+{
+  "project_name": "LoxeLife",
+  "theme": "dark",
+  "archetype": "Cinematic/Organic (Immersive Fantasy - Blend of Archetype 1 & 5)",
+  "emotional_tone": "Magical, wonder, joy, adventure, premium, ancient, tactile",
+  "typography": {
+    "font_stack": {
+      "primary_header": "Pirata One, cursive",
+      "secondary_header": "Bebas Neue, sans-serif",
+      "display_magic": "Shojumaru, system-ui",
+      "display_bouncy": "Luckiest Guy, cursive",
+      "body_data": "Space Mono, monospace",
+      "body_narrative": "Cinzel, serif"
+    },
+    "google_fonts_url": "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;700&family=Luckiest+Guy&family=Pirata+One&family=Shojumaru&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap",
+    "font_rules": {
+      "h1": "font-['Pirata_One'] text-5xl md:text-6xl tracking-wider text-loxedex-ink drop-shadow-sm",
+      "h2": "font-['Bebas_Neue'] text-4xl md:text-5xl tracking-widest text-loxedex-ink",
+      "magic_text": "font-['Shojumaru'] text-chi-gold animate-pulse drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]",
+      "bouncy_text": "font-['Luckiest_Guy'] text-3xl tracking-wide",
+      "data_stats": "font-['Space_Mono'] text-sm uppercase tracking-widest",
+      "narrative": "font-['Cinzel'] text-lg leading-relaxed text-loxedex-ink/90"
+    }
+  },
+  "colors": {
+    "background": {
+      "void": "#070A0F",
+      "desk": "#16100B",
+      "parchment_base": "#F4EFE6",
+      "parchment_shadow": "#D4C4A8",
+      "parchment_burn": "#8C7356"
+    },
+    "text": {
+      "loxedex_ink": "#2C241B",
+      "loxedex_faded": "#5C5042",
+      "light": "#F0EAD6"
+    },
+    "chi": {
+      "gold": "#FFD700",
+      "gold_glow": "#FF8C00",
+      "spirit_green": "#4ADE80",
+      "spirit_dark": "#059669"
+    },
+    "biomes": {
+      "savanna": { "primary": "#D97736", "accent": "#F2C047" },
+      "dunes": { "primary": "#F29F05", "accent": "#0B1D40" },
+      "canopy": { "primary": "#1E5928", "accent": "#A3D977" },
+      "peaks": { "primary": "#E0F2F2", "accent": "#7BA6A6" },
+      "woods": { "primary": "#732002", "accent": "#264027" },
+      "outback": { "primary": "#8C2703", "accent": "#D96941" },
+      "wastes": { "primary": "#F2F2F2", "accent": "#5EC4D9" },
+      "ocean": { "primary": "#023059", "accent": "#F28D9F" }
+    }
+  },
+  "layout_and_spacing": {
+    "container": "w-full min-h-screen flex items-center justify-center overflow-hidden relative",
+    "parchment_padding": "p-8 md:p-12 lg:p-16",
+    "grid_bento": "grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8",
+    "card_spacing": "p-6 flex flex-col gap-4"
+  },
+  "components": {
+    "HomeDesk": {
+      "wrapper_classes": "relative w-full h-screen bg-void flex items-center justify-center overflow-hidden",
+      "background_layer": "absolute inset-0 bg-cover bg-center opacity-60 mix-blend-multiply transition-all duration-1000",
+      "overlay_vignette": "absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,#070A0F_100%)] pointer-events-none z-10",
+      "instruction": "This is the main cinematic entry. Replace pure pitch-black with a deep dark textured void using the vignette. Dynamic local time should shift the opacity/hue of the ambient glow."
+    },
+    "LoxedexBook": {
+      "wrapper_classes": "relative bg-[#F4EFE6] w-full max-w-5xl aspect-[4/3] rounded-sm shadow-[20px_20px_60px_rgba(0,0,0,0.8),inset_0_0_60px_rgba(140,115,86,0.3)] flex overflow-hidden z-20 transition-transform duration-700 hover:scale-[1.01]",
+      "spine": "absolute left-1/2 top-0 bottom-0 w-8 -ml-4 bg-gradient-to-r from-transparent via-[#8C7356]/40 to-transparent z-30 shadow-[inset_1px_0_5px_rgba(0,0,0,0.2)]",
+      "page_texture": "absolute inset-0 opacity-40 mix-blend-multiply pointer-events-none",
+      "instruction": "Simulate a heavy unrolled map or open book. The spine gives the illusion of two pages. Use jagged/deckled borders with CSS clip-path or complex border graphics if available, or just heavy inner shadow."
+    },
+    "AnimalCard": {
+      "wrapper_classes": "relative bg-[#2A1F18] border-2 border-[#16100B] rounded-md shadow-[0_15px_30px_rgba(0,0,0,0.7)] p-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(255,215,0,0.2)]",
+      "image_container": "w-full aspect-square bg-[#1A120B] rounded-sm overflow-hidden relative border border-[#3A2A1F]",
+      "stats_row": "flex justify-between items-center mt-4 border-t border-[#3A2A1F] pt-2",
+      "wood_pyrography_effect": "sepia(0.8) contrast(1.2) brightness(0.9) mix-blend-luminosity",
+      "5_star_override": "border-[#FFD700] shadow-[0_0_20px_rgba(255,215,0,0.4)]",
+      "instruction": "This represents the 3D wooden tile. Image should look burned in (pyrography) unless it's a 5-star which bursts into vibrant color with golden glowing chi veins."
+    },
+    "WorldMap": {
+      "wrapper_classes": "w-full max-w-4xl mx-auto drop-shadow-[0_0_30px_rgba(255,215,0,0.1)]",
+      "biome_node": "cursor-pointer transition-all duration-500 fill-current opacity-70 hover:opacity-100 hover:scale-105 origin-center",
+      "instruction": "SVG-based map. Each biome is a path. When hovered, the path glows intensely with its specific biome color."
+    },
+    "SaolaGuide": {
+      "wrapper_classes": "fixed bottom-4 right-4 md:bottom-8 md:right-8 w-32 h-40 z-50 animate-[bounce_4s_ease-in-out_infinite]",
+      "dialog_bubble": "absolute bottom-full right-full mb-4 mr-2 bg-[#F4EFE6] text-loxedex-ink p-4 rounded-tl-xl rounded-tr-xl rounded-bl-xl shadow-xl font-['Space_Mono'] text-sm max-w-xs border-2 border-[#8C7356]",
+      "lantern_glow": "absolute bottom-4 right-4 w-8 h-8 rounded-full bg-chi-gold opacity-50 blur-xl animate-pulse",
+      "instruction": "Humorous guide character. Will pop up text in the dialog bubble. When a 5-star is found, the lantern glow expands and turns intensely bright."
+    },
+    "RaritySystem": {
+      "locked_low": "grayscale contrast-125 opacity-40 blur-[1px]",
+      "locked_high": "grayscale contrast-200 opacity-20 blur-[2px] brightness-50",
+      "unlocked": "grayscale-0 opacity-100 blur-0 brightness-100 transition-all duration-1000",
+      "unlock_animation": "animate-[shake_0.5s_cubic-bezier(.36,.07,.19,.97)_both] drop-shadow-[0_0_40px_rgba(255,215,0,1)]",
+      "instruction": "1-2 stars show clearly but muted. 3-5 stars show as faint charcoal sketches until unlocked. The unlock triggers a violent shake and a burst of color."
+    }
+  },
+  "interactive_elements": {
+    "primary_button": "bg-gradient-to-r from-chi-gold to-chi-gold_glow text-void font-['Bebas_Neue'] text-2xl px-8 py-3 rounded-sm shadow-[0_0_15px_rgba(255,215,0,0.5)] hover:shadow-[0_0_25px_rgba(255,215,0,0.8)] hover:scale-105 transition-all duration-300",
+    "secondary_button": "bg-[#2A1F18] text-[#F4EFE6] border border-[#8C7356] font-['Space_Mono'] text-sm px-6 py-2 hover:bg-[#3A2A1F] transition-colors duration-200",
+    "test_id_rule": "ALL interactive elements must include a role-based data-testid attribute (e.g., data-testid='map-biome-savanna', data-testid='loxedex-next-page')."
+  },
+  "media_assets": {
+    "textures": {
+      "parchment_bg": "https://images.unsplash.com/photo-1706790608211-4c03fd4f4d33?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwxfHxhbmNpZW50JTIwcGFyY2htZW50JTIwdGV4dHVyZXxlbnwwfHx8fDE3ODA2MjU0NjF8MA&ixlib=rb-4.1.0&q=85",
+      "desk_wood": "https://images.unsplash.com/photo-1619976553860-b7ffbe9a093b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwxfHxkYXJrJTIwbWFob2dhbnklMjB3b29kJTIwdGV4dHVyZXxlbnwwfHx8fDE3ODA2MjU0Njd8MA&ixlib=rb-4.1.0&q=85",
+      "night_glow": "https://images.pexels.com/photos/4090329/pexels-photo-4090329.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+    },
+    "placeholders": {
+      "saola": "Render using SVG or a stylized CSS shape for now, wrapping with floating animations.",
+      "animals": "Use Unsplash queries for specific animals applying the pyrography CSS filter if 3D assets aren't available."
+    }
+  },
+  "instructions_to_main_agent": [
+    "Load Google Fonts provided in the font_stack exactly.",
+    "Do NOT use pure #000000 background for the body. Use the 'void' or 'desk' color defined here, layered with the night_glow texture on low opacity/multiply blend mode for a deep, cinematic feel.",
+    "Implement the 'Loxedex' as an actual book-like interface on desktop using the parchment colors and texture overlay.",
+    "Ensure the Saola character has a glowing lantern element that pulses using Tailwind animations.",
+    "When rendering 1-2 star animals, show them normally. When rendering 3-5 star locked animals, heavily apply grayscale, blur, and opacity to simulate a 'charcoal sketch'.",
+    "Make sure every interactive click target has a specific 'data-testid' based on its role.",
+    "For the dynamic local-time lighting: Use a simple JS check of new Date().getHours() to apply a warm orange overlay layer (opacity 10-20%) during day, and a cool blue overlay layer during night."
+  ]
+}
