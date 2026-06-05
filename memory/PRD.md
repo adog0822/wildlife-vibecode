@@ -98,3 +98,15 @@ test their knowledge in trials, and bluff their way through cocktail-party multi
 ## Deferred to Future
 - AI-generated painterly biome backgrounds via Gemini Nano Banana (requires backend image-gen pipeline + storage)
 - Public multiplayer Sanctuary leaderboard (Mongo collection + endpoint)
+
+
+## Iteration 7 (2026-02-05 — AI Painterly Backgrounds Wired In)
+- ✅ **AI-generated painterly biome backgrounds** via Gemini Nano Banana (backend pipeline + static cache at `/app/backend/static/biome_bg/{biome}.png`)
+- ✅ Fixed React crash `bgUrl is not defined` in `BiomeView.jsx` — resolved layered backgrounds (AI painterly as far layer, Unsplash photo as mid multiply-blend overlay)
+- ✅ Smoke-tested `/biome/savanna` — renders cleanly with AI background, hotspots, D-pad, minimap, header
+
+## Pending / Next Up
+- 🟠 Saola Guide AI Chat (Claude Sonnet 4.5) — UI exists, no conversational backend yet
+- 🟡 Field Journalist Missions (LLM photo prompts in Photo Mode)
+- 🟢 Ecosystem Poker post-lobby gameplay polish (bluff reveal, board sync clarity)
+- 🧹 Refactor `BiomeView.jsx` (712 lines) into `BiomeCanvas`, `PhotoMode`, `DayNightController`, `BiomeAudio` modules

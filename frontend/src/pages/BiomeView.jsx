@@ -383,6 +383,10 @@ const BiomeView = () => {
   const hsBase = vp.w < 640 ? 56 : 44;
   const mmW = 220, mmH = 80;
 
+  // Resolve background layers: prefer AI-painterly bg when available, fall back to Unsplash hero.
+  const bgUrl = aiBg || biome.bg;
+  const midUrl = biome.bg;
+
   return (
     <motion.div className="relative w-screen h-screen overflow-hidden select-none touch-none" data-testid={`biome-${key}`}
       initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}
