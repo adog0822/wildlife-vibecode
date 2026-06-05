@@ -8,309 +8,152 @@ import { startAmbient, stopAmbient, playUnlock, playChi, playFootstep } from "..
 import { setSaolaMood } from "../lib/saolaBus";
 import SaolaGuide from "../components/SaolaGuide";
 
+// HIGH-RES Unsplash biome images (3840 wide) for max immersion
+const Q = "?auto=format&fit=crop&w=3840&q=85";
 const BIOMES = {
   savanna: {
     label: "Sun-Baked Savanna",
-    tagline: "Drag to roam. Push forward to step into the grass.",
-    bg: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=2400&q=80",
-    mid: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=2400&q=80",
-    overlay: "radial-gradient(circle at 50% 70%, rgba(255,180,80,0.18), transparent 70%), linear-gradient(180deg, rgba(217,119,54,0.05) 0%, rgba(20,8,2,0.55) 100%)",
+    tagline: "The grass hides golden eyes. Drag to roam, scroll to step forward.",
+    bg: `https://images.unsplash.com/photo-1547471080-7cc2caa01a7e${Q}`,
+    sky: "linear-gradient(180deg, #f4b95a 0%, #c46a1c 40%, #5a2304 100%)",
+    fg: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Acacia_silhouette.svg/640px-Acacia_silhouette.svg.png",
+    overlay: "radial-gradient(circle at 50% 70%, rgba(255,180,80,0.10), transparent 60%), linear-gradient(180deg, rgba(217,119,54,0.05) 0%, rgba(20,8,2,0.50) 100%)",
     accent: "#F2C047", accentDeep: "#D97736",
     particle: "heat", ambient: "savanna",
-    wildlife: [
-      { kind: "lion", count: 2 },
-      { kind: "bird", count: 4 },
-      { kind: "tallGrass", count: 14 },
-    ],
-    revealStyle: "walk-left",
   },
   dunes: {
     label: "The Great Dunes",
-    tagline: "Sand whispers ancient secrets. Drag to scout, scroll to wade.",
-    bg: "https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?auto=format&fit=crop&w=2400&q=80",
-    mid: "https://images.unsplash.com/photo-1542401886-65d6c61db217?auto=format&fit=crop&w=2400&q=80",
-    overlay: "radial-gradient(circle at 60% 50%, rgba(242,159,5,0.2), transparent 70%), linear-gradient(180deg, rgba(242,159,5,0.05) 0%, rgba(11,29,64,0.7) 100%)",
+    tagline: "Sand whispers ancient secrets. Drag, scroll, dig deeper.",
+    bg: `https://images.unsplash.com/photo-1473580044384-7ba9967e16a0${Q}`,
+    sky: "linear-gradient(180deg, #f1a83a 0%, #c4691a 50%, #2c1b40 100%)",
+    fg: null,
+    overlay: "radial-gradient(circle at 60% 50%, rgba(242,159,5,0.10), transparent 60%), linear-gradient(180deg, rgba(242,159,5,0.05) 0%, rgba(11,29,64,0.55) 100%)",
     accent: "#F29F05", accentDeep: "#8c4a02",
     particle: "sand", ambient: "dunes",
-    wildlife: [
-      { kind: "scorpion", count: 2 },
-      { kind: "bird", count: 2 },
-      { kind: "dustDevil", count: 3 },
-    ],
-    revealStyle: "rise-from-sand",
   },
   canopy: {
     label: "Emerald Canopy",
     tagline: "Mist hangs in the green cathedral. Push deeper into the vines.",
-    bg: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=2400&q=80",
-    mid: "https://images.unsplash.com/photo-1500354960686-12270e96d660?auto=format&fit=crop&w=2400&q=80",
-    overlay: "radial-gradient(circle at 50% 60%, rgba(74,222,128,0.18), transparent 70%), linear-gradient(180deg, rgba(30,89,40,0.25) 0%, rgba(4,16,8,0.7) 100%)",
+    bg: `https://images.unsplash.com/photo-1518837695005-2083093ee35b${Q}`,
+    sky: "linear-gradient(180deg, #2a4a30 0%, #0e2a14 60%, #04130a 100%)",
+    fg: null,
+    overlay: "radial-gradient(circle at 50% 60%, rgba(74,222,128,0.10), transparent 60%), linear-gradient(180deg, rgba(30,89,40,0.20) 0%, rgba(4,16,8,0.55) 100%)",
     accent: "#A3D977", accentDeep: "#1E5928",
     particle: "mist", ambient: "canopy",
-    wildlife: [
-      { kind: "butterfly", count: 8 },
-      { kind: "monkey", count: 2 },
-      { kind: "leaf", count: 12 },
-    ],
-    revealStyle: "swing-down",
   },
   peaks: {
     label: "Mystic Peaks",
     tagline: "Wind sings through prayer flags. Step into the ridgeline.",
-    bg: "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=2400&q=80",
-    mid: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2400&q=80",
-    overlay: "radial-gradient(circle at 50% 30%, rgba(224,242,242,0.15), transparent 70%), linear-gradient(180deg, rgba(123,166,166,0.1) 0%, rgba(8,18,26,0.75) 100%)",
+    bg: `https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99${Q}`,
+    sky: "linear-gradient(180deg, #b8d8e0 0%, #5a8088 60%, #1a2a3a 100%)",
+    fg: null,
+    overlay: "radial-gradient(circle at 50% 30%, rgba(224,242,242,0.08), transparent 60%), linear-gradient(180deg, rgba(123,166,166,0.08) 0%, rgba(8,18,26,0.55) 100%)",
     accent: "#E0F2F2", accentDeep: "#7BA6A6",
     particle: "snow", ambient: "peaks",
-    wildlife: [
-      { kind: "eagle", count: 3 },
-      { kind: "yak", count: 1 },
-      { kind: "snowflake", count: 30 },
-    ],
-    revealStyle: "fade-from-snow",
   },
   woods: {
     label: "Whispering Woods",
     tagline: "Moss-laced silence. Something rustles in the auburn dark.",
-    bg: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=2400&q=80",
-    mid: "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=2400&q=80",
-    overlay: "radial-gradient(circle at 50% 50%, rgba(115,32,2,0.2), transparent 70%), linear-gradient(180deg, rgba(38,64,39,0.3) 0%, rgba(6,3,10,0.85) 100%)",
+    bg: `https://images.unsplash.com/photo-1448375240586-882707db888b${Q}`,
+    sky: "linear-gradient(180deg, #2a1810 0%, #1a0e08 60%, #06030a 100%)",
+    fg: null,
+    overlay: "radial-gradient(circle at 50% 50%, rgba(115,32,2,0.12), transparent 60%), linear-gradient(180deg, rgba(38,64,39,0.22) 0%, rgba(6,3,10,0.70) 100%)",
     accent: "#A0531A", accentDeep: "#732002",
     particle: "spores", ambient: "woods",
-    wildlife: [
-      { kind: "owl", count: 2 },
-      { kind: "deer", count: 1 },
-      { kind: "firefly", count: 18 },
-    ],
-    revealStyle: "step-from-trees",
   },
   outback: {
     label: "Crimson Outback",
     tagline: "Red earth hums. A kookaburra cackles at the dusk.",
-    bg: "https://images.unsplash.com/photo-1529108190281-9a4f620bc2d8?auto=format&fit=crop&w=2400&q=80",
-    mid: "https://images.unsplash.com/photo-1493497029755-f49c8e9ac619?auto=format&fit=crop&w=2400&q=80",
-    overlay: "radial-gradient(circle at 50% 50%, rgba(140,39,3,0.2), transparent 70%), linear-gradient(180deg, rgba(217,105,65,0.08) 0%, rgba(10,4,2,0.75) 100%)",
+    bg: `https://images.unsplash.com/photo-1529108190281-9a4f620bc2d8${Q}`,
+    sky: "linear-gradient(180deg, #f1a464 0%, #8c2703 60%, #2a0c04 100%)",
+    fg: null,
+    overlay: "radial-gradient(circle at 50% 50%, rgba(140,39,3,0.12), transparent 60%), linear-gradient(180deg, rgba(217,105,65,0.06) 0%, rgba(10,4,2,0.60) 100%)",
     accent: "#D96941", accentDeep: "#8C2703",
     particle: "dust", ambient: "outback",
-    wildlife: [
-      { kind: "kangaroo", count: 2 },
-      { kind: "bird", count: 4 },
-      { kind: "dustDevil", count: 2 },
-    ],
-    revealStyle: "hop-in",
   },
   wastes: {
     label: "Frozen Wastes",
     tagline: "Auroras wash the ice. Drag to hunt the silence.",
-    bg: "https://images.unsplash.com/photo-1457269449834-928af64c684d?auto=format&fit=crop&w=2400&q=80",
-    mid: "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?auto=format&fit=crop&w=2400&q=80",
-    overlay: "radial-gradient(circle at 50% 30%, rgba(94,196,217,0.2), transparent 70%), linear-gradient(180deg, rgba(207,233,245,0.08) 0%, rgba(4,8,12,0.75) 100%)",
+    bg: `https://images.unsplash.com/photo-1457269449834-928af64c684d${Q}`,
+    sky: "linear-gradient(180deg, #233a4d 0%, #5b8c9d 30%, #cfe9f5 70%, #6688aa 100%)",
+    fg: null,
+    overlay: "radial-gradient(circle at 50% 30%, rgba(94,196,217,0.10), transparent 60%), linear-gradient(180deg, rgba(207,233,245,0.05) 0%, rgba(4,8,12,0.55) 100%)",
     accent: "#cfe9f5", accentDeep: "#5EC4D9",
     particle: "snow", ambient: "wastes",
-    wildlife: [
-      { kind: "penguin", count: 3 },
-      { kind: "snowflake", count: 50 },
-      { kind: "aurora", count: 1 },
-    ],
-    revealStyle: "waddle-in",
   },
   ocean: {
     label: "The Deep Blue",
     tagline: "Bioluminescence drifts. Push deeper into the abyss.",
-    bg: "https://images.unsplash.com/photo-1583212292454-1fe6229603b7?auto=format&fit=crop&w=2400&q=80",
-    mid: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=2400&q=80",
-    overlay: "radial-gradient(circle at 50% 60%, rgba(2,48,89,0.35), transparent 70%), linear-gradient(180deg, rgba(242,141,159,0.05) 0%, rgba(2,6,14,0.85) 100%)",
+    bg: `https://images.unsplash.com/photo-1583212292454-1fe6229603b7${Q}`,
+    sky: "linear-gradient(180deg, #0a3a5a 0%, #02101f 60%, #02060e 100%)",
+    fg: null,
+    overlay: "radial-gradient(circle at 50% 60%, rgba(2,48,89,0.30), transparent 60%), linear-gradient(180deg, rgba(242,141,159,0.04) 0%, rgba(2,6,14,0.75) 100%)",
     accent: "#F28D9F", accentDeep: "#023059",
     particle: "bubbles", ambient: "ocean",
-    wildlife: [
-      { kind: "fish", count: 12 },
-      { kind: "jellyfish", count: 3 },
-      { kind: "shark", count: 1 },
-    ],
-    revealStyle: "swim-in",
   },
 };
 
 const hashCode = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = ((h<<5)-h) + s.charCodeAt(i); return Math.abs(h); };
 
-const SCENE_W = 6400;
-const SCENE_H = 2400;
+const SCENE_W = 9000;
+const SCENE_H = 3200;
 
-// === Per-biome wildlife sprites (SVG silhouettes) ===
-const Wildlife = ({ kind, accent, accentDeep, idx }) => {
-  const delay = (idx * 1.7) % 12;
-  const duration = 18 + (idx * 3) % 18;
-  if (kind === "lion") {
-    const top = 70 + (idx*7) % 10;
-    return (
-      <motion.svg viewBox="0 0 100 50" width={120} height={60} className="absolute pointer-events-none"
-        style={{ top: `${top}%` }}
-        initial={{ x: -200 }} animate={{ x: SCENE_W + 200, y: [0, -2, 0, -2, 0] }}
-        transition={{ duration: duration*2, repeat: Infinity, delay, ease: "linear", y: { duration: 1.2, repeat: Infinity }}}>
-        <ellipse cx="60" cy="30" rx="28" ry="12" fill={accentDeep} opacity="0.85" />
-        <circle cx="85" cy="22" r="10" fill={accentDeep} opacity="0.85" />
-        <path d="M75 14 Q80 8 88 14 Q92 18 88 22" fill={accentDeep} opacity="0.85" />
-        <path d="M35 30 L30 45 M45 30 L48 45 M70 32 L72 45 M82 32 L84 45" stroke={accentDeep} strokeWidth="2" />
-      </motion.svg>
-    );
+// Tiny SVG silhouette hints next to each hotspot — make wildlife visually discoverable
+const AnimalSilhouette = ({ category, color, size = 60 }) => {
+  // category derived from trophic / diet / habitat
+  const props = { fill: color, opacity: 0.85 };
+  switch (category) {
+    case "big_cat":
+      return <svg viewBox="0 0 100 60" width={size} height={size*0.6}><ellipse cx="60" cy="40" rx="32" ry="14" {...props}/><circle cx="85" cy="32" r="10" {...props}/><path d="M75 26 Q80 18 88 24" {...props}/><path d="M32 50 L28 60 M48 50 L48 60 M70 50 L72 60 M82 50 L84 60" stroke={color} strokeWidth="2.5" fill="none"/></svg>;
+    case "bird":
+      return <svg viewBox="0 0 100 60" width={size} height={size*0.6}><ellipse cx="50" cy="35" rx="20" ry="10" {...props}/><circle cx="75" cy="32" r="7" {...props}/><path d="M30 30 Q20 15 40 20 Q35 30 30 30 Z" {...props}/><path d="M20 35 L0 30 Q15 38 20 35 Z" {...props}/><path d="M48 45 L46 55 M55 45 L57 55" stroke={color} strokeWidth="2" fill="none"/></svg>;
+    case "ape":
+      return <svg viewBox="0 0 80 80" width={size*0.8} height={size*0.8}><circle cx="40" cy="30" r="20" {...props}/><circle cx="40" cy="55" r="22" {...props}/><circle cx="32" cy="28" r="3" fill="#fff"/><circle cx="48" cy="28" r="3" fill="#fff"/></svg>;
+    case "fish":
+      return <svg viewBox="0 0 100 50" width={size} height={size*0.5}><path d="M0 25 Q25 5 65 25 Q25 45 0 25 Z" {...props}/><path d="M65 25 L100 10 L92 25 L100 40 Z" {...props}/></svg>;
+    case "whale":
+      return <svg viewBox="0 0 120 50" width={size} height={size*0.4}><path d="M0 25 Q30 8 80 22 Q105 28 115 22 L115 30 Q100 38 75 28 Q35 38 0 30 Z" {...props}/></svg>;
+    case "snake":
+      return <svg viewBox="0 0 100 30" width={size} height={size*0.3}><path d="M0 20 Q15 5 30 20 Q45 35 60 20 Q75 5 90 20 L100 15" stroke={color} strokeWidth="6" fill="none" strokeLinecap="round"/></svg>;
+    case "reptile":
+      return <svg viewBox="0 0 100 50" width={size} height={size*0.5}><ellipse cx="50" cy="30" rx="30" ry="12" {...props}/><circle cx="78" cy="22" r="6" {...props}/><path d="M22 38 L20 50 M40 38 L40 50 M60 38 L60 50 M76 38 L78 50" stroke={color} strokeWidth="2" fill="none"/></svg>;
+    case "elephant":
+      return <svg viewBox="0 0 100 80" width={size} height={size*0.8}><ellipse cx="55" cy="50" rx="30" ry="22" {...props}/><circle cx="80" cy="42" r="13" {...props}/><path d="M85 50 Q92 65 88 78" stroke={color} strokeWidth="5" fill="none" strokeLinecap="round"/><path d="M30 70 L28 80 M50 70 L50 80 M70 70 L72 80" stroke={color} strokeWidth="3" fill="none"/></svg>;
+    case "bear":
+      return <svg viewBox="0 0 100 80" width={size} height={size*0.8}><ellipse cx="55" cy="50" rx="32" ry="22" {...props}/><circle cx="80" cy="38" r="13" {...props}/><circle cx="75" cy="32" r="4" {...props}/><circle cx="85" cy="32" r="4" {...props}/><path d="M30 70 L30 78 M48 70 L48 78 M64 70 L64 78" stroke={color} strokeWidth="3" fill="none"/></svg>;
+    case "deer":
+      return <svg viewBox="0 0 100 80" width={size} height={size*0.8}><ellipse cx="50" cy="45" rx="22" ry="12" {...props}/><ellipse cx="78" cy="32" rx="6" ry="8" {...props}/><path d="M74 25 L70 12 M82 25 L86 12 M76 25 L70 18 M82 25 L88 18" stroke={color} strokeWidth="2" fill="none"/><path d="M35 56 L33 70 M48 56 L48 70 M60 56 L62 70 M70 56 L72 70" stroke={color} strokeWidth="2" fill="none"/></svg>;
+    case "small":
+    default:
+      return <svg viewBox="0 0 60 40" width={size*0.6} height={size*0.4}><ellipse cx="32" cy="22" rx="18" ry="9" {...props}/><circle cx="48" cy="18" r="6" {...props}/><path d="M22 30 L20 38 M32 30 L32 38 M42 30 L44 38" stroke={color} strokeWidth="2" fill="none"/></svg>;
   }
-  if (kind === "tallGrass") {
-    const left = (idx * 471) % SCENE_W;
-    const top = 75 + (idx*3) % 15;
-    return (
-      <motion.svg viewBox="0 0 20 40" width="18" height="36" className="absolute pointer-events-none"
-        style={{ left, top: `${top}%` }}
-        animate={{ rotate: [-4, 4, -4] }} transition={{ duration: 3 + (idx%3), repeat: Infinity }}>
-        <path d="M10 40 L10 5" stroke={accentDeep} strokeWidth="1.5" />
-        <path d="M10 40 L6 8" stroke={accentDeep} strokeWidth="1" />
-        <path d="M10 40 L14 6" stroke={accentDeep} strokeWidth="1" />
-      </motion.svg>
-    );
-  }
-  if (kind === "bird") {
-    const top = 5 + (idx * 6) % 20;
-    return (
-      <motion.svg viewBox="0 0 60 20" width="60" height="20" className="absolute pointer-events-none"
-        style={{ top: `${top}%` }}
-        initial={{ x: -100 }} animate={{ x: SCENE_W + 100 }}
-        transition={{ duration: duration, repeat: Infinity, delay, ease: "linear" }}>
-        <motion.path d="M0 10 Q15 0 30 10 Q45 0 60 10" stroke={accentDeep} strokeWidth="2" fill="none" strokeLinecap="round"
-          animate={{ d: ["M0 10 Q15 0 30 10 Q45 0 60 10","M0 10 Q15 18 30 10 Q45 18 60 10","M0 10 Q15 0 30 10 Q45 0 60 10"] }}
-          transition={{ duration: 0.6, repeat: Infinity }} />
-      </motion.svg>
-    );
-  }
-  if (kind === "butterfly") {
-    const top = 25 + (idx * 5) % 40;
-    return (
-      <motion.div className="absolute pointer-events-none" style={{ top: `${top}%`, color: accent }}
-        initial={{ x: -40 }} animate={{ x: SCENE_W + 40, y: [0, -40, 20, -25, 0] }}
-        transition={{ duration: duration, repeat: Infinity, delay, ease: "linear", y: { duration: 5, repeat: Infinity }}}>
-        <svg viewBox="0 0 30 20" width="22" height="18">
-          <motion.ellipse cx="10" cy="10" rx="8" ry="6" fill="currentColor" opacity="0.85"
-            animate={{ scaleX: [1, 0.3, 1] }} transition={{ duration: 0.3, repeat: Infinity }} />
-          <motion.ellipse cx="20" cy="10" rx="8" ry="6" fill="currentColor" opacity="0.85"
-            animate={{ scaleX: [1, 0.3, 1] }} transition={{ duration: 0.3, repeat: Infinity }} />
-        </svg>
-      </motion.div>
-    );
-  }
-  if (kind === "fish") {
-    const top = 20 + (idx * 7) % 60;
-    return (
-      <motion.div className="absolute pointer-events-none" style={{ top: `${top}%`, color: accent }}
-        initial={{ x: -60 }} animate={{ x: SCENE_W + 60, y: [0, 25, -15, 10, 0] }}
-        transition={{ duration: duration, repeat: Infinity, delay, ease: "linear", y: { duration: 7, repeat: Infinity }}}>
-        <svg viewBox="0 0 40 20" width="36" height="18">
-          <path d="M0 10 Q10 2 25 10 Q10 18 0 10 Z" fill="currentColor" opacity="0.75" />
-          <path d="M25 10 L40 4 L37 10 L40 16 Z" fill="currentColor" opacity="0.75" />
-          <circle cx="8" cy="8" r="1.5" fill="#1a0e04" />
-        </svg>
-      </motion.div>
-    );
-  }
-  if (kind === "jellyfish") {
-    const left = (idx * 1233) % SCENE_W;
-    return (
-      <motion.div className="absolute pointer-events-none" style={{ left, top: "30%", color: accent }}
-        animate={{ y: [0, SCENE_H * 0.5, 0] }} transition={{ duration: 40, repeat: Infinity, delay }}>
-        <svg viewBox="0 0 50 70" width="50" height="70">
-          <ellipse cx="25" cy="20" rx="20" ry="14" fill="currentColor" opacity="0.5" />
-          <motion.g animate={{ scaleY: [1, 0.8, 1] }} transition={{ duration: 2, repeat: Infinity }} style={{ transformOrigin: "25px 20px" }}>
-            <path d="M10 30 Q12 50 15 70 M20 30 Q21 55 22 70 M30 30 Q29 55 28 70 M40 30 Q38 50 35 70"
-                  stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.5" />
-          </motion.g>
-        </svg>
-      </motion.div>
-    );
-  }
-  if (kind === "shark") {
-    const top = 50 + (idx*10) % 20;
-    return (
-      <motion.svg viewBox="0 0 120 40" width="180" height="60" className="absolute pointer-events-none"
-        style={{ top: `${top}%` }}
-        initial={{ x: -200 }} animate={{ x: SCENE_W + 200 }} transition={{ duration: duration*1.5, repeat: Infinity, delay, ease: "linear" }}>
-        <path d="M0 20 Q30 5 80 20 Q100 25 115 20 L115 25 Q90 30 75 22 Q40 35 0 25 Z" fill={accentDeep} opacity="0.7" />
-        <path d="M50 5 L55 20 L60 5 Z" fill={accentDeep} opacity="0.7" />
-      </motion.svg>
-    );
-  }
-  if (kind === "snowflake") {
-    const left = (idx * 311) % SCENE_W;
-    const dur = 12 + (idx % 8);
-    return (
-      <motion.div className="absolute rounded-full pointer-events-none"
-        style={{ left, top: "-2%", width: 3 + (idx%3), height: 3 + (idx%3), background: accent, boxShadow: `0 0 4px ${accent}` }}
-        animate={{ y: SCENE_H + 50, x: [0, 20, -20, 10, 0] }}
-        transition={{ duration: dur, repeat: Infinity, delay: delay/3, ease: "linear", x: { duration: 4, repeat: Infinity }}} />
-    );
-  }
-  if (kind === "firefly") {
-    const left = (idx * 727) % SCENE_W;
-    const top = 30 + (idx*11) % 60;
-    return (
-      <motion.div className="absolute rounded-full pointer-events-none"
-        style={{ left, top: `${top}%`, width: 4, height: 4, background: "#F2C047", boxShadow: "0 0 10px #FFD700" }}
-        animate={{ x: [0, 60, -40, 30, 0], y: [0, -30, 20, -10, 0], opacity: [0, 1, 0.4, 1, 0] }}
-        transition={{ duration: 8, repeat: Infinity, delay: delay/2 }} />
-    );
-  }
-  if (kind === "scorpion" || kind === "monkey" || kind === "owl" || kind === "deer" || kind === "kangaroo" || kind === "penguin" || kind === "yak" || kind === "eagle") {
-    // small ground-level critters using minimal silhouette
-    const top = kind === "owl" || kind === "eagle" ? 15 + (idx*8)%20 : 80;
-    return (
-      <motion.svg viewBox="0 0 60 30" width={kind==="yak"?80:50} height={kind==="yak"?40:30} className="absolute pointer-events-none"
-        style={{ top: `${top}%` }}
-        initial={{ x: -100 }} animate={{ x: SCENE_W + 100, y: kind==="kangaroo"?[0,-20,0,-20,0]:[0,-2,0,-2,0] }}
-        transition={{ duration: duration*1.4, repeat: Infinity, delay, ease: "linear", y: { duration: kind==="kangaroo"?1.2:1.5, repeat: Infinity }}}>
-        <ellipse cx="30" cy="18" rx="18" ry="8" fill={accentDeep} opacity="0.85" />
-        <circle cx="48" cy="13" r="6" fill={accentDeep} opacity="0.85" />
-        <path d="M20 26 L18 30 M30 26 L30 30 M40 26 L42 30" stroke={accentDeep} strokeWidth="1.5" />
-      </motion.svg>
-    );
-  }
-  if (kind === "leaf") {
-    const left = (idx * 829) % SCENE_W;
-    const dur = 9 + (idx % 6);
-    return (
-      <motion.svg viewBox="0 0 16 16" width="14" height="14" className="absolute pointer-events-none"
-        style={{ left, top: "0%", color: accentDeep }}
-        animate={{ y: SCENE_H, x: [0, 30, -30, 20, 0], rotate: [0, 360] }}
-        transition={{ duration: dur, repeat: Infinity, delay: delay/2, ease: "linear" }}>
-        <path d="M8 0 Q14 8 8 16 Q2 8 8 0 Z" fill="currentColor" opacity="0.6" />
-      </motion.svg>
-    );
-  }
-  if (kind === "dustDevil") {
-    const left = (idx * 1117) % SCENE_W;
-    return (
-      <motion.div className="absolute pointer-events-none rounded-full"
-        style={{ left, top: "60%", width: 30, height: 80, background: `radial-gradient(circle, ${accent}40, transparent)` }}
-        animate={{ x: [0, 100, 200, 100, 0], rotate: [0, 720] }} transition={{ duration: 12, repeat: Infinity, delay }} />
-    );
-  }
-  if (kind === "aurora") {
-    return (
-      <motion.div className="absolute inset-x-0 top-0 h-1/2 pointer-events-none"
-        style={{ background: "linear-gradient(180deg, transparent 0%, rgba(94,196,217,0.18) 30%, rgba(163,217,119,0.15) 60%, transparent 100%)" }}
-        animate={{ opacity: [0.5, 1, 0.6, 1, 0.5] }} transition={{ duration: 9, repeat: Infinity }} />
-    );
-  }
-  return null;
+};
+
+const categorize = (a) => {
+  const n = a.name.toLowerCase();
+  if (n.includes("whale") || n.includes("dolphin")) return "whale";
+  if (n.includes("shark") || n.includes("fish") || n.includes("squid") || n.includes("manta") || n.includes("ray")) return "fish";
+  if (n.includes("eagle") || n.includes("owl") || n.includes("bird") || n.includes("vulture") || n.includes("falcon") || n.includes("hawk") || n.includes("toucan") || n.includes("macaw") || n.includes("penguin") || n.includes("kiwi") || n.includes("flam") || n.includes("ostrich") || n.includes("emu") || n.includes("cassowary") || n.includes("rhea") || n.includes("condor") || n.includes("crane") || n.includes("stork") || n.includes("kookaburra") || n.includes("kakapo") || n.includes("kea") || n.includes("hoatzin") || n.includes("petrel") || n.includes("albatross") || n.includes("booby") || n.includes("cormorant") || n.includes("monal") || n.includes("pheasant") || n.includes("peafowl") || n.includes("quetzal") || n.includes("lyrebird") || n.includes("hornbill") || n.includes("robin") || n.includes("capercaillie") || n.includes("paradise")) return "bird";
+  if (n.includes("lion") || n.includes("tiger") || n.includes("leopard") || n.includes("cheetah") || n.includes("jaguar") || n.includes("puma") || n.includes("ocelot") || n.includes("caracal") || n.includes("lynx") || n.includes("bobcat") || n.includes("cougar") || n.includes("cat") || n.includes("panther") || n.includes("margay") || n.includes("serval") || n.includes("clouded")) return "big_cat";
+  if (n.includes("snake") || n.includes("python") || n.includes("cobra") || n.includes("viper") || n.includes("anaconda") || n.includes("taipan") || n.includes("boa") || n.includes("rattlesnake") || n.includes("mamba")) return "snake";
+  if (n.includes("crocodile") || n.includes("alligator") || n.includes("caiman") || n.includes("gharial") || n.includes("komodo") || n.includes("iguana") || n.includes("lizard") || n.includes("tortoise") || n.includes("turtle") || n.includes("tuatara") || n.includes("gecko") || n.includes("monitor")) return "reptile";
+  if (n.includes("gorilla") || n.includes("chimp") || n.includes("orang") || n.includes("monkey") || n.includes("macaque") || n.includes("tamarin") || n.includes("mandrill") || n.includes("baboon") || n.includes("lemur") || n.includes("loris") || n.includes("howler") || n.includes("proboscis") || n.includes("binturong")) return "ape";
+  if (n.includes("elephant") || n.includes("rhino") || n.includes("hippo") || n.includes("giraffe") || n.includes("tapir") || n.includes("buffalo") || n.includes("camel") || n.includes("yak") || n.includes("bison") || n.includes("oryx") || n.includes("moose") || n.includes("elk")) return "elephant";
+  if (n.includes("bear") || n.includes("panda")) return "bear";
+  if (n.includes("deer") || n.includes("gazelle") || n.includes("antelope") || n.includes("ibex") || n.includes("chamois") || n.includes("markhor") || n.includes("zebra") || n.includes("kangaroo") || n.includes("guanaco") || n.includes("llama") || n.includes("alpaca") || n.includes("vicuna") || n.includes("reindeer") || n.includes("wildebeest") || n.includes("warthog") || n.includes("saiga") || n.includes("pronghorn") || n.includes("bighorn") || n.includes("addax") || n.includes("tahr") || n.includes("saola") || n.includes("okapi") || n.includes("bongo")) return "deer";
+  return "small";
 };
 
 const Particles = ({ kind, color }) => {
-  const arr = Array.from({ length: 30 });
+  const arr = Array.from({ length: 40 });
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
       {arr.map((_, i) => (
         <span key={i} className="absolute rounded-full opacity-60"
-          style={{
-            left: `${Math.random()*100}%`, top: `${Math.random()*100}%`,
-            width: 3 + Math.random()*3, height: 3 + Math.random()*3,
-            background: color, boxShadow: `0 0 6px ${color}`,
-            animation: `float-y ${4 + Math.random()*6}s ease-in-out ${Math.random()*6}s infinite`
-          }} />
+          style={{ left: `${Math.random()*100}%`, top: `${Math.random()*100}%`,
+                   width: 3 + Math.random()*3, height: 3 + Math.random()*3,
+                   background: color, boxShadow: `0 0 6px ${color}`,
+                   animation: `float-y ${4 + Math.random()*6}s ease-in-out ${Math.random()*6}s infinite` }} />
       ))}
     </div>
   );
@@ -318,55 +161,22 @@ const Particles = ({ kind, color }) => {
 
 const Star = ({ filled, color }) => <span className={filled ? "" : "opacity-30"} style={{ color }}>★</span>;
 
-// Reveal animation per biome style
-const revealVariants = {
-  "walk-left": {
-    initial: { x: -200, opacity: 0 },
-    animate: { x: 0, opacity: 1, transition: { duration: 1.4, ease: "easeOut" } },
-  },
-  "rise-from-sand": {
-    initial: { y: 200, opacity: 0, scale: 0.6 },
-    animate: { y: 0, opacity: 1, scale: 1, transition: { duration: 1.2, ease: "easeOut" } },
-  },
-  "swing-down": {
-    initial: { y: -200, rotate: -20, opacity: 0 },
-    animate: { y: 0, rotate: 0, opacity: 1, transition: { duration: 1.2, type: "spring", bounce: 0.4 } },
-  },
-  "fade-from-snow": {
-    initial: { opacity: 0, filter: "blur(20px)", scale: 1.2 },
-    animate: { opacity: 1, filter: "blur(0px)", scale: 1, transition: { duration: 1.4 } },
-  },
-  "step-from-trees": {
-    initial: { x: -100, opacity: 0, filter: "brightness(0.3)" },
-    animate: { x: 0, opacity: 1, filter: "brightness(1)", transition: { duration: 1.3 } },
-  },
-  "hop-in": {
-    initial: { y: -150, opacity: 0 },
-    animate: { y: [-150, 0, -60, 0], opacity: 1, transition: { duration: 1.3 } },
-  },
-  "waddle-in": {
-    initial: { x: -100, opacity: 0 },
-    animate: { x: 0, opacity: 1, rotate: [0, -5, 5, -5, 0], transition: { duration: 1.4 } },
-  },
-  "swim-in": {
-    initial: { x: 200, opacity: 0, rotate: -10 },
-    animate: { x: 0, opacity: 1, rotate: 0, transition: { duration: 1.4, ease: "easeOut" } },
-  },
-};
-
 const BiomeView = () => {
   const { key } = useParams();
   const navigate = useNavigate();
   const biome = BIOMES[key] || BIOMES.savanna;
   const [animals, setAnimals] = useState([]);
-  const [pan, setPan] = useState({ x: 0, y: -300 });
-  const [zoom, setZoom] = useState(1.0);
   const [revealed, setRevealed] = useState(null);
   const [discovered, setDiscovered] = useState(new Set());
   const [images, setImages] = useState({});
   const [showHint, setShowHint] = useState(true);
+  const [zoom, setZoom] = useState(1.0);
+  // pan state: use ref for smooth rAF updates, mirror in state for layout
+  const panRef = useRef({ x: -800, y: -400 });
+  const [panSnap, setPanSnap] = useState({ x: -800, y: -400 });
   const dragRef = useRef({ active: false, sx: 0, sy: 0, sPan: { x: 0, y: 0 }, pinchDist: null, pinchZoom: 1 });
   const lastStepRef = useRef(0);
+  const rafRef = useRef(null);
 
   useEffect(() => {
     fetchAnimals(key).then((d) => setAnimals(d.animals || []));
@@ -374,7 +184,7 @@ const BiomeView = () => {
     try { setDiscovered(new Set(JSON.parse(localStorage.getItem(`biome.discovered.${key}`) || "[]"))); } catch {}
     setShowHint(true);
     const t = setTimeout(() => setShowHint(false), 5500);
-    return () => { stopAmbient(); clearTimeout(t); };
+    return () => { stopAmbient(); clearTimeout(t); if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [vp, setVp] = useState({ w: window.innerWidth, h: window.innerHeight });
@@ -384,57 +194,58 @@ const BiomeView = () => {
     return () => window.removeEventListener("resize", r);
   }, []);
 
-  // viewport extents at current zoom
   const sceneW = SCENE_W * zoom;
   const sceneH = SCENE_H * zoom;
-  const maxX = 0, minX = -(sceneW - vp.w);
-  const maxY = 0, minY = -(sceneH - vp.h);
+  const minX = Math.min(0, -(sceneW - vp.w));
+  const minY = Math.min(0, -(sceneH - vp.h));
+  const clamp = (x, y) => ({ x: Math.min(0, Math.max(minX, x)), y: Math.min(0, Math.max(minY, y)) });
 
-  const clamp = (x, y) => ({
-    x: Math.min(maxX, Math.max(minX, x)),
-    y: Math.min(maxY, Math.max(minY, y)),
-  });
-
-  // Deterministic hotspot positions in 2D
+  // distribute hotspots
   const hotspots = useMemo(() => {
     return animals.map((a, i) => {
-      const cols = 6;
+      const cols = 8;
       const row = Math.floor(i / cols);
       const col = i % cols;
       const totalRows = Math.ceil(animals.length / cols);
-      const usableW = SCENE_W - 600;
-      const usableH = SCENE_H - 600;
-      const baseX = 300 + (col / Math.max(cols-1, 1)) * usableW;
-      const baseY = 300 + (row / Math.max(totalRows-1, 1)) * usableH;
-      const jx = (hashCode(a.id + "x") % 240) - 120;
-      const jy = (hashCode(a.id + "y") % 200) - 100;
-      return { a, x: baseX + jx, y: baseY + jy };
+      const usableW = SCENE_W - 800;
+      const usableH = SCENE_H - 800;
+      const baseX = 400 + (col / Math.max(cols-1, 1)) * usableW;
+      const baseY = 400 + (row / Math.max(totalRows-1, 1)) * usableH;
+      const jx = (hashCode(a.id + "x") % 300) - 150;
+      const jy = (hashCode(a.id + "y") % 240) - 120;
+      return { a, x: baseX + jx, y: baseY + jy, cat: categorize(a) };
     });
   }, [animals]);
 
-  // Pan + pinch handlers
+  // Smooth rAF-driven snap update
+  const scheduleSnap = () => {
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      setPanSnap({ ...panRef.current });
+      rafRef.current = null;
+    });
+  };
+  const setPan = (np) => { panRef.current = np; scheduleSnap(); };
+
   const startPan = (cx, cy) => {
-    dragRef.current = { active: true, sx: cx, sy: cy, sPan: { ...pan }, pinchDist: null, pinchZoom: zoom };
+    dragRef.current = { active: true, sx: cx, sy: cy, sPan: { ...panRef.current }, pinchDist: null, pinchZoom: zoom, moved: 0 };
     setShowHint(false);
   };
   const movePan = (cx, cy) => {
     if (!dragRef.current.active) return;
-    const np = clamp(dragRef.current.sPan.x + (cx - dragRef.current.sx), dragRef.current.sPan.y + (cy - dragRef.current.sy));
-    setPan(np);
-    // footstep ticks (every ~200ms while moving)
+    const dx = cx - dragRef.current.sx, dy = cy - dragRef.current.sy;
+    dragRef.current.moved = Math.max(dragRef.current.moved || 0, Math.sqrt(dx*dx+dy*dy));
+    setPan(clamp(dragRef.current.sPan.x + dx, dragRef.current.sPan.y + dy));
     const now = Date.now();
-    if (now - lastStepRef.current > 380) { playFootstep(); lastStepRef.current = now; }
+    if (now - lastStepRef.current > 350) { playFootstep(); lastStepRef.current = now; }
   };
   const endPan = () => { dragRef.current.active = false; dragRef.current.pinchDist = null; };
 
-  const onMouseDown = (e) => startPan(e.clientX, e.clientY);
+  const onMouseDown = (e) => { e.preventDefault(); startPan(e.clientX, e.clientY); };
   const onMouseMove = (e) => movePan(e.clientX, e.clientY);
   const onMouseUp = endPan;
 
-  const touchDist = (t) => {
-    const dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY;
-    return Math.sqrt(dx*dx + dy*dy);
-  };
+  const touchDist = (t) => { const dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY; return Math.sqrt(dx*dx + dy*dy); };
   const onTouchStart = (e) => {
     if (e.touches.length === 2) {
       dragRef.current = { ...dragRef.current, active: false, pinchDist: touchDist(e.touches), pinchZoom: zoom };
@@ -445,8 +256,7 @@ const BiomeView = () => {
   const onTouchMove = (e) => {
     if (e.touches.length === 2 && dragRef.current.pinchDist) {
       const d = touchDist(e.touches);
-      const newZoom = Math.min(2.2, Math.max(0.75, dragRef.current.pinchZoom * (d / dragRef.current.pinchDist)));
-      setZoom(newZoom);
+      setZoom(Math.min(2.5, Math.max(0.7, dragRef.current.pinchZoom * (d / dragRef.current.pinchDist))));
     } else if (e.touches.length === 1) {
       movePan(e.touches[0].clientX, e.touches[0].clientY);
     }
@@ -455,38 +265,35 @@ const BiomeView = () => {
 
   const onWheel = (e) => {
     if (e.ctrlKey || e.metaKey) {
-      const nz = Math.min(2.2, Math.max(0.75, zoom - e.deltaY * 0.002));
-      setZoom(nz);
-    } else if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      // scroll = forward/backward into the scene
-      const nz = Math.min(2.2, Math.max(0.75, zoom + (e.deltaY > 0 ? -0.05 : 0.05)));
-      setZoom(nz);
+      e.preventDefault();
+      setZoom(z => Math.min(2.5, Math.max(0.7, z - e.deltaY * 0.0025)));
     } else {
-      const np = clamp(pan.x - e.deltaX, pan.y);
-      setPan(np);
+      // smooth pan with scroll
+      setPan(clamp(panRef.current.x - e.deltaX, panRef.current.y - e.deltaY));
     }
   };
 
-  // Keyboard nav: WASD or arrows
+  // Keyboard
   useEffect(() => {
     const onKey = (e) => {
-      const STEP = 80;
-      if (["ArrowLeft","a","A"].includes(e.key)) setPan(p => clamp(p.x + STEP, p.y));
-      else if (["ArrowRight","d","D"].includes(e.key)) setPan(p => clamp(p.x - STEP, p.y));
-      else if (["ArrowUp","w","W"].includes(e.key)) setZoom(z => Math.min(2.2, z + 0.08));
-      else if (["ArrowDown","s","S"].includes(e.key)) setZoom(z => Math.max(0.75, z - 0.08));
-      else return;
-      playFootstep();
+      const STEP = 100;
+      const p = panRef.current;
+      if (["ArrowLeft","a","A"].includes(e.key)) { setPan(clamp(p.x + STEP, p.y)); playFootstep(); }
+      else if (["ArrowRight","d","D"].includes(e.key)) { setPan(clamp(p.x - STEP, p.y)); playFootstep(); }
+      else if (["ArrowUp","w","W"].includes(e.key)) { setPan(clamp(p.x, p.y + STEP)); playFootstep(); }
+      else if (["ArrowDown","s","S"].includes(e.key)) { setPan(clamp(p.x, p.y - STEP)); playFootstep(); }
+      else if (e.key === "+" || e.key === "=") setZoom(z => Math.min(2.5, z + 0.15));
+      else if (e.key === "-" || e.key === "_") setZoom(z => Math.max(0.7, z - 0.15));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [zoom, pan]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line
 
-  const stepForward = () => { setZoom(z => Math.min(2.2, z + 0.15)); playFootstep(); };
-  const stepBack = () => { setZoom(z => Math.max(0.75, z - 0.15)); playFootstep(); };
+  const stepForward = () => { setZoom(z => Math.min(2.5, z + 0.2)); playFootstep(); };
+  const stepBack = () => { setZoom(z => Math.max(0.7, z - 0.2)); playFootstep(); };
 
   const handleHotspot = async (h) => {
-    if (dragRef.current.active) return;
+    if (dragRef.current.moved > 5) return; // ignore if was a drag
     if (!images[h.a.id]) {
       const url = await getWikiImage(h.a.wiki);
       setImages((c) => ({ ...c, [h.a.id]: url }));
@@ -502,17 +309,17 @@ const BiomeView = () => {
 
   const inspect = (a) => { setRevealed(null); navigate(`/animal/${a.id}`); };
 
-  // Minimap calc
-  const mmW = 200, mmH = 80;
+  // Minimap
+  const mmW = 220, mmH = 80;
+  const hsBase = vp.w < 640 ? 46 : 32;
 
-  // Hotspot size based on tap-zone — bigger on mobile
-  const hsBase = vp.w < 640 ? 44 : 28;
-
+  const pan = panSnap; // for layout
   return (
     <motion.div className="relative w-screen h-screen overflow-hidden select-none touch-none" data-testid={`biome-${key}`}
-      initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}>
+      initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}
+      style={{ background: biome.sky }}>
 
-      {/* Header bar */}
+      {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-30 px-3 md:px-6 py-3 flex items-center justify-between gap-2"
            style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.75), transparent)" }}>
         <button onClick={() => navigate("/map")} className="btn-wood text-xs md:text-sm" data-testid="biome-back">← Atlas</button>
@@ -536,98 +343,116 @@ const BiomeView = () => {
         </span>
       </div>
 
-      {/* Drag hint */}
+      {/* Hint */}
       {showHint && (
-        <motion.div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none text-center"
-                    initial={{ opacity: 0 }} animate={{ opacity: 0.9 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }}>
+        <motion.div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none text-center px-6"
+                    initial={{ opacity: 0 }} animate={{ opacity: 0.92 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }}>
           <div className="font-['Pirata_One'] text-2xl md:text-4xl text-[#f4efe6]"
-               style={{ textShadow: "0 0 20px rgba(0,0,0,0.9)" }}>
-            ↖ drag to roam · scroll to step forward ↗
+               style={{ textShadow: "0 0 20px rgba(0,0,0,0.95)" }}>
+            ↖ drag · scroll to roam ↗
           </div>
-          <div className="font-['Space_Mono'] text-xs text-[#f4efe6]/70 mt-2">WASD / arrows · pinch to zoom</div>
+          <div className="font-['Space_Mono'] text-xs text-[#f4efe6]/80 mt-2">WASD / arrows · pinch or +/- to zoom</div>
         </motion.div>
       )}
 
-      {/* Scene viewport */}
+      {/* SCENE viewport */}
       <div onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
            onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
            onWheel={onWheel}
            className="absolute inset-0 cursor-grab active:cursor-grabbing"
            style={{ touchAction: "none" }}>
 
-        {/* Background — slow parallax (0.5x speed) */}
-        <div className="absolute inset-y-0 left-0 bg-cover bg-center"
+        {/* Sky gradient (no parallax) */}
+        <div className="absolute inset-0" style={{ background: biome.sky }} />
+
+        {/* Far background (parallax 0.3) */}
+        <div className="absolute inset-y-0 left-0"
              style={{
-               width: sceneW * 1.2, height: sceneH * 1.2,
+               width: sceneW * 1.5, height: sceneH,
                backgroundImage: `url(${biome.bg})`,
-               backgroundSize: "cover",
-               transform: `translate(${pan.x * 0.4}px, ${pan.y * 0.4}px) scale(1)`,
-               transformOrigin: "0 0",
-               filter: "saturate(1.15) contrast(1.05)",
+               backgroundSize: "cover", backgroundPosition: "center",
+               transform: `translate3d(${pan.x * 0.3}px, ${pan.y * 0.5}px, 0)`,
+               willChange: "transform",
+               filter: "saturate(1.2) contrast(1.05) brightness(0.85)",
+               opacity: 0.92,
              }} />
 
-        {/* Mid layer (0.7x parallax) */}
-        <div className="absolute inset-y-0 left-0 opacity-45"
+        {/* Mid layer — blurred copy for depth (parallax 0.65) */}
+        <div className="absolute inset-y-0 left-0"
              style={{
-               width: sceneW, height: sceneH,
-               backgroundImage: `url(${biome.mid})`,
-               backgroundSize: "cover",
-               backgroundPosition: "center",
-               transform: `translate(${pan.x * 0.7}px, ${pan.y * 0.7}px)`,
-               transformOrigin: "0 0",
+               width: sceneW * 1.2, height: sceneH,
+               backgroundImage: `url(${biome.bg})`,
+               backgroundSize: "cover", backgroundPosition: "30% center",
+               transform: `translate3d(${pan.x * 0.65}px, ${pan.y * 0.7}px, 0)`,
+               willChange: "transform",
+               opacity: 0.5,
+               filter: "saturate(1.4) blur(2px) brightness(0.7)",
                mixBlendMode: "overlay",
              }} />
 
-        {/* Foreground — full speed (hotspots + wildlife) */}
+        {/* Atmospheric depth fog layer */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: `linear-gradient(180deg, ${biome.accentDeep}00 0%, ${biome.accentDeep}20 60%, ${biome.accentDeep}55 100%)`
+        }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: biome.overlay }} />
+
+        {/* Foreground layer (full speed) — hotspots */}
         <div className="absolute inset-y-0 left-0"
-             style={{
-               width: sceneW, height: sceneH,
-               transform: `translate(${pan.x}px, ${pan.y}px)`,
-               transformOrigin: "0 0",
-             }}>
+             style={{ width: sceneW, height: sceneH,
+                      transform: `translate3d(${pan.x}px, ${pan.y}px, 0)`,
+                      willChange: "transform" }}>
 
-          {/* idle biome wildlife */}
-          {biome.wildlife.map((w, i) =>
-            Array.from({ length: w.count }).map((_, j) => (
-              <Wildlife key={`${i}-${j}`} kind={w.kind} idx={i*10 + j} accent={biome.accent} accentDeep={biome.accentDeep} />
-            ))
-          )}
-
-          {/* hotspots */}
+          {/* hotspots — bigger glow + visible silhouette */}
           {hotspots.map((h) => {
             const disc = discovered.has(h.a.id);
-            const isRevealed = revealed?.a.id === h.a.id;
-            const size = h.a.rarity >= 4 ? hsBase + 10 : hsBase;
+            const isRevealing = revealed?.a.id === h.a.id;
+            const haloSize = h.a.rarity >= 4 ? 160 : 120;
             return (
-              <button key={h.a.id}
+              <motion.button key={h.a.id}
                 onClick={() => handleHotspot(h)}
                 className="absolute -translate-x-1/2 -translate-y-1/2 group"
-                style={{ left: h.x, top: h.y, width: size+24, height: size+24 }}
+                style={{ left: h.x, top: h.y, width: haloSize, height: haloSize }}
+                whileHover={{ scale: 1.1 }}
                 data-testid={`hotspot-${h.a.id}`}>
-                <div className="absolute inset-0 rounded-full glow-pulse"
-                     style={{ background: `radial-gradient(circle, ${biome.accent}80 0%, transparent 70%)`, opacity: disc ? 1 : 0.6 }} />
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/30 backdrop-blur-sm group-hover:scale-125 group-active:scale-90 transition-transform"
-                     style={{ width: size, height: size,
-                              background: disc ? `radial-gradient(circle, ${biome.accent}, ${biome.accentDeep})` : `radial-gradient(circle, ${biome.accent}80, ${biome.accentDeep}40)`,
-                              boxShadow: `0 0 ${size}px ${biome.accent}` }}>
-                  {h.a.rarity === 5 && <div className="absolute inset-0 rounded-full animate-ping" style={{ background: biome.accent, opacity: 0.4 }} />}
-                  {disc && (
-                    <div className="absolute inset-1 rounded-full bg-white/90 flex items-center justify-center text-[10px] font-bold text-black">
-                      {"★".repeat(h.a.rarity).slice(0,3)}
-                    </div>
-                  )}
+                {/* expanding glow halo */}
+                <div className="absolute inset-0 rounded-full"
+                     style={{ background: `radial-gradient(circle, ${biome.accent}66 0%, ${biome.accent}22 30%, transparent 70%)` }} />
+                <motion.div className="absolute inset-0 rounded-full"
+                     style={{ background: `radial-gradient(circle, ${biome.accent}55 0%, transparent 60%)` }}
+                     animate={{ scale: [1, 1.3, 1], opacity: [0.7, 0.3, 0.7] }}
+                     transition={{ duration: 3, repeat: Infinity, delay: (hashCode(h.a.id) % 100) / 30 }} />
+
+                {/* silhouette of the animal as a hint */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div style={{ filter: `drop-shadow(0 4px 12px ${biome.accent})` }}>
+                    <AnimalSilhouette category={h.cat} color={disc ? biome.accent : `${biome.accentDeep}cc`} size={haloSize * 0.55} />
+                  </div>
                 </div>
-                {/* In-scene animated reveal preview when this hotspot was just revealed */}
-                {isRevealed && images[h.a.id] && (
-                  <motion.div
-                    className="absolute left-1/2 -bottom-2 -translate-x-1/2 w-32 h-32 rounded-full overflow-hidden border-4 pointer-events-none"
-                    style={{ borderColor: biome.accent, boxShadow: `0 0 30px ${biome.accent}` }}
-                    variants={revealVariants[biome.revealStyle] || revealVariants["walk-left"]}
-                    initial="initial" animate="animate">
+
+                {/* rarity stars overlay */}
+                {h.a.rarity === 5 && <div className="absolute inset-0 rounded-full animate-ping" style={{ background: biome.accent, opacity: 0.25 }} />}
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-0.5">
+                  <div className="text-xs" style={{ color: biome.accent, textShadow: "0 0 6px #000" }}>{"★".repeat(h.a.rarity)}</div>
+                  {disc && <div className="font-['Pirata_One'] text-xs px-2 py-0.5 rounded bg-black/70 text-white whitespace-nowrap">{h.a.name}</div>}
+                </div>
+
+                {/* Hover label */}
+                {!disc && (
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-['Bebas_Neue'] tracking-widest pointer-events-none"
+                       style={{ background: "rgba(0,0,0,0.85)", color: biome.accent }}>
+                    TAP TO REVEAL
+                  </div>
+                )}
+
+                {/* Burning-in image on reveal */}
+                {isRevealing && images[h.a.id] && (
+                  <motion.div className="absolute left-1/2 -bottom-4 -translate-x-1/2 w-28 h-28 rounded-full overflow-hidden border-4 pointer-events-none"
+                              style={{ borderColor: biome.accent, boxShadow: `0 0 30px ${biome.accent}` }}
+                              initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}>
                     <img src={images[h.a.id]} alt="" className="w-full h-full object-cover" />
                   </motion.div>
                 )}
-              </button>
+              </motion.button>
             );
           })}
         </div>
@@ -635,16 +460,19 @@ const BiomeView = () => {
         {/* Particles + vignette */}
         <Particles kind={biome.particle} color={biome.accent} />
         <div className="absolute inset-0 pointer-events-none"
-             style={{ background: "radial-gradient(circle at center, transparent 35%, rgba(0,0,0,0.7) 100%)" }} />
-
-        {/* subtle camera bob */}
-        <motion.div className="absolute inset-0 pointer-events-none"
-                    animate={{ y: [0, -2, 0, -1.5, 0] }}
-                    transition={{ duration: 4, repeat: Infinity }} />
+             style={{ background: "radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.7) 100%)" }} />
       </div>
 
-      {/* Step forward/back buttons */}
-      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-30 flex gap-2" data-testid="step-controls">
+      {/* On-screen +/- zoom buttons (right side) */}
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-2" data-testid="zoom-controls">
+        <button onClick={() => setZoom(z => Math.min(2.5, z + 0.15))}
+                className="bg-black/60 border border-white/20 rounded w-10 h-10 text-[#f4efe6] hover:bg-black/80 font-bold text-xl backdrop-blur-sm" data-testid="zoom-in">+</button>
+        <button onClick={() => setZoom(z => Math.max(0.7, z - 0.15))}
+                className="bg-black/60 border border-white/20 rounded w-10 h-10 text-[#f4efe6] hover:bg-black/80 font-bold text-xl backdrop-blur-sm" data-testid="zoom-out">−</button>
+      </div>
+
+      {/* Step forward/back controls */}
+      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 flex gap-2" data-testid="step-controls">
         <button onClick={stepBack} className="bg-black/60 border border-white/20 rounded px-3 py-2 backdrop-blur-sm font-['Bebas_Neue'] tracking-widest text-xs text-[#f4efe6] hover:bg-black/80" data-testid="step-back">↓ STEP BACK</button>
         <div className="bg-black/60 border border-white/20 rounded px-3 py-2 backdrop-blur-sm font-['Space_Mono'] text-xs text-[#FFD700]">
           {(zoom*100).toFixed(0)}%
@@ -652,12 +480,11 @@ const BiomeView = () => {
         <button onClick={stepForward} className="bg-black/60 border border-white/20 rounded px-3 py-2 backdrop-blur-sm font-['Bebas_Neue'] tracking-widest text-xs text-[#f4efe6] hover:bg-black/80" data-testid="step-forward">↑ STEP FORWARD</button>
       </div>
 
-      {/* 2D Minimap */}
+      {/* Minimap */}
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 bg-black/60 border border-white/20 rounded backdrop-blur-sm overflow-hidden"
            style={{ width: mmW, height: mmH }} data-testid="biome-minimap">
         {hotspots.map((h) => (
-          <div key={h.a.id}
-               className="absolute rounded-full"
+          <div key={h.a.id} className="absolute rounded-full"
                style={{
                  left: (h.x / SCENE_W) * mmW - 2,
                  top: (h.y / SCENE_H) * mmH - 2,
@@ -666,19 +493,18 @@ const BiomeView = () => {
                  boxShadow: discovered.has(h.a.id) ? `0 0 6px ${biome.accent}` : "none",
                }} />
         ))}
-        {/* viewport rect */}
         <div className="absolute border-2 rounded-sm"
              style={{
                left: (-pan.x / sceneW) * mmW,
                top: (-pan.y / sceneH) * mmH,
-               width: (vp.w / sceneW) * mmW,
-               height: (vp.h / sceneH) * mmH,
+               width: Math.min(mmW, (vp.w / sceneW) * mmW),
+               height: Math.min(mmH, (vp.h / sceneH) * mmH),
                borderColor: biome.accent,
                background: `${biome.accent}20`,
              }} />
       </div>
 
-      {/* Revealed animal card overlay */}
+      {/* Revealed card overlay */}
       <AnimatePresence>
         {revealed && (
           <motion.div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm"
@@ -694,8 +520,9 @@ const BiomeView = () => {
                 {images[revealed.a.id] ? (
                   <motion.img src={images[revealed.a.id]} alt={revealed.a.name}
                        className="w-full h-full object-cover"
-                       variants={revealVariants[biome.revealStyle] || revealVariants["walk-left"]}
-                       initial="initial" animate="animate" />
+                       initial={{ scale: 1.3, opacity: 0, filter: "blur(8px) sepia(1)" }}
+                       animate={{ scale: 1, opacity: 1, filter: "blur(0px) sepia(0)" }}
+                       transition={{ duration: 1.2 }} />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[#5C5042]">…</div>
                 )}

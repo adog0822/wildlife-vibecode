@@ -57,7 +57,12 @@ const AnimalDetail = () => {
         const blob = await (await fetch(dataUrl)).blob();
         const file = new File([blob], `loxelife-${animal.id}.png`, { type: "image/png" });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: `I discovered the ${animal.name} on LoxeLife!`, text: "Can you find them all? 🌍🐾" });
+          try {
+            await navigator.share({ files: [file], title: `I discovered the ${animal.name} on LoxeLife!`, text: "Can you find them all? 🌍🐾" });
+          } catch (err) {
+            // AbortError means user dismissed share dialog — silently ignore
+            if (err && err.name !== "AbortError") console.warn("share:", err);
+          }
         }
       } catch {}
     } finally {

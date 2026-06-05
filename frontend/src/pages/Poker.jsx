@@ -7,7 +7,6 @@ import { getWikiImage } from "../lib/wikiImage";
 import { playTileClack, playChi, playSplinter, playUnlock } from "../lib/sfx";
 import { setSaolaMood } from "../lib/saolaBus";
 import SaolaGuide from "../components/SaolaGuide";
-
 const PokerLobby = () => {
   const navigate = useNavigate();
   const [name, setName] = useState(getPlayerName());
@@ -77,6 +76,11 @@ export const PokerGame = () => {
         if (prev) {
           const prevBoard = prev.board?.length || 0;
           const newBoard = m.state.board?.length || 0;
+          // detect new player joining (lobby state)
+          if (m.state.state === "lobby" && (m.state.players?.length || 0) > (prev.players?.length || 0)) {
+            playChi();
+            setSaolaMood("wideEyes", 1000);
+          }
           if (newBoard > prevBoard) {
             const newest = m.state.board[newBoard - 1];
             if (newest?.result === "exposed_lie" || newest?.result === "parasite_drain") {
@@ -168,31 +172,58 @@ export const PokerGame = () => {
             <div className="mt-3 flex items-center gap-2 justify-center flex-wrap">
               <button onClick={() => { navigator.clipboard?.writeText(state.code); }}
                       className="btn-wood text-sm" data-testid="copy-code">📋 Copy Code</button>
-              <button onClick={() => {
+              <button onClick={async () => {
                 const url = `${window.location.origin}/poker/${state.code}`;
                 if (navigator.share) {
-                  navigator.share({ title: "Join my LoxeLife game!", text: `Code: ${state.code}`, url });
-                } else { navigator.clipboard?.writeText(url); }
+                  try { await navigator.share({ title: "Join my LoxeLife game!", text: `Code: ${state.code}`, url }); }
+                  catch (e) { if (e?.name !== "AbortError") { try { await navigator.clipboard?.writeText(url); } catch {} } }
+                } else {
+                  try { await navigator.clipboard?.writeText(url); } catch {}
+                }
               }} className="btn-wood text-sm" data-testid="copy-link">🔗 Copy Link</button>
             </div>
             <div className="font-['Cinzel'] italic text-[#5C5042] text-sm mt-4">
               Players in the lodge: <b>{state.players.length}</b> · Need at least 2
             </div>
-            <div className="mt-2 flex justify-center gap-2 flex-wrap">
+            <div className="mt-2 flex justify-center gap-2 flex-wrap" data-testid="players-roster">
               {state.players.map((p) => (
-                <span key={p.id} className="bg-[#FFD700]/15 border border-[#8C7356] rounded-full px-3 py-1 font-['Bebas_Neue'] tracking-widest text-xs text-[#2C241B]">
+                <motion.span key={p.id}
+                  initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", duration: 0.5 }}
+                  className="bg-[#FFD700]/20 border border-[#8C7356] rounded-full px-3 py-1 font-['Bebas_Neue'] tracking-widest text-xs text-[#2C241B]">
                   {p.name}{p.is_host ? " 👑" : ""}
-                </span>
+                </motion.span>
               ))}
             </div>
-            {state.players.length >= 2 && (
-              <button onClick={start} className="btn-chi mt-5 text-lg" data-testid="start-game">Start the Game →</button>
-            )}
+            <button onClick={start} disabled={state.players.length < 2}
+                    className="btn-chi mt-5 text-lg disabled:opacity-40 disabled:cursor-not-allowed"
+                    data-testid="start-game">
+              {state.players.length < 2 ? `Waiting for ${2 - state.players.length} more player${2-state.players.length===1?"":"s"}...` : "Start the Game →"}
+            </button>
+            <div className="mt-4 text-left bg-black/5 border border-[#8C7356]/30 rounded p-3 font-['Cinzel'] text-xs text-[#2C241B]">
+              <div className="font-['Bebas_Neue'] tracking-widest text-[#8C2703] mb-1">HOW TO WIN</div>
+              <div className="mb-1">🛡️ <b>Wardens</b> protect the ecosystem — keep Harmony above 0 for 6 rounds.</div>
+              <div className="mb-1">🜏 <b>One hidden Saboteur</b> sneaks invasive tiles in. Drag Harmony to 0 to win.</div>
+              <div>Bluff. Challenge. Use Spirit Tiles. Trust no one.</div>
+            </div>
           </div>
         )}
 
         {state.state !== "lobby" && (
           <>
+            {/* High-stakes role banner */}
+            <div className="bg-black/50 border-2 border-[#8C2703] rounded p-2 mb-3 text-center" data-testid="role-banner">
+              <div className="font-['Bebas_Neue'] tracking-[0.3em] text-[10px] text-[#FFD700]">YOUR ROLE</div>
+              <div className="font-['Pirata_One'] text-xl" style={{ color: state.is_saboteur ? "#FF4040" : "#A3D977" }}>
+                {state.is_saboteur ? "🜏 THE SABOTEUR — drain Harmony to 0" : "🛡 A WARDEN — keep Harmony above 0 for 6 rounds"}
+              </div>
+              <div className="font-['Cinzel'] italic text-[10px] text-[#f4efe6]/70 mt-0.5">
+                {state.is_saboteur
+                  ? "Bluff with invasive species. Stay hidden. Trust no one."
+                  : "Bluff when forced. Challenge the Saboteur. Protect the ecosystem."}
+              </div>
+            </div>
+
             {/* Board demand */}
             <div className="parchment p-4 rounded-md mb-4 text-center">
               <div className="font-['Bebas_Neue'] tracking-widest text-sm text-[#5C5042]">THE BOARD DEMANDS</div>
