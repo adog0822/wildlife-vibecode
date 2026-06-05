@@ -1,12 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { createPokerRoom, wsURL } from "../lib/api";
 import { getPlayerName, setPlayerName } from "../lib/storage";
 import { getWikiImage } from "../lib/wikiImage";
 import { playTileClack, playChi, playSplinter, playUnlock } from "../lib/sfx";
 import { setSaolaMood } from "../lib/saolaBus";
 import SaolaGuide from "../components/SaolaGuide";
+
+// Readable bluff-result labels + theme colors for tile reveal
+const RESULT_META = {
+  truthful:       { label: "TRUTHFUL",      icon: "✓", color: "#A3D977", halo: "rgba(163,217,119,0.55)" },
+  exposed_lie:    { label: "EXPOSED LIE",   icon: "✗", color: "#FF4040", halo: "rgba(255,64,64,0.6)" },
+  passed_true:    { label: "PASSED · TRUE", icon: "✓", color: "#7BC4FF", halo: "rgba(123,196,255,0.45)" },
+  passed_lie:     { label: "PASSED · LIE",  icon: "⊘", color: "#FFD700", halo: "rgba(255,215,0,0.5)" },
+  parasite_drain: { label: "PARASITE DRAIN", icon: "🜏", color: "#C77BFF", halo: "rgba(199,123,255,0.6)" },
+  oracle:         { label: "ORACLE SIGHT",  icon: "⊕", color: "#FFD700", halo: "rgba(255,215,0,0.7)" },
+};
 const PokerLobby = () => {
   const navigate = useNavigate();
   const [name, setName] = useState(getPlayerName());
@@ -211,6 +221,28 @@ export const PokerGame = () => {
 
         {state.state !== "lobby" && (
           <>
+            {/* YOUR TURN pulse banner (subtle but unmissable) */}
+            <AnimatePresence>
+              {myTurn && state.state === "playing" && !state.pending_play && (
+                <motion.div
+                  key="your-turn"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="mb-3 rounded-md text-center py-2 font-['Bebas_Neue'] tracking-[0.4em] text-sm"
+                  style={{
+                    background: "linear-gradient(90deg, rgba(255,215,0,0.18), rgba(255,140,0,0.32), rgba(255,215,0,0.18))",
+                    border: "1px solid rgba(255,215,0,0.55)",
+                    color: "#FFD700",
+                    boxShadow: "0 0 18px rgba(255,140,0,0.35)",
+                    animation: "glow-pulse 2.2s ease-in-out infinite",
+                  }}
+                  data-testid="your-turn-banner">
+                  ⟁ YOUR TURN — pick a tile &amp; slide it face-down ⟁
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* High-stakes role banner */}
             <div className="bg-black/50 border-2 border-[#8C2703] rounded p-2 mb-3 text-center" data-testid="role-banner">
               <div className="font-['Bebas_Neue'] tracking-[0.3em] text-[10px] text-[#FFD700]">YOUR ROLE</div>
@@ -234,8 +266,16 @@ export const PokerGame = () => {
             <div className="mb-4">
               <div className="font-['Bebas_Neue'] tracking-widest text-sm text-[#f4efe6]/80 mb-2">ECOSYSTEM</div>
               <div className="flex gap-2 overflow-x-auto sm:flex-wrap" data-testid="board-tiles">
-                {state.board.map((t, i) => (
-                  <div key={i} className={`wood-tile ${t.revealed && t.actual ? `wood-tile-${t.actual.rarity}` : "wood-tile-3"} p-2 w-24 sm:w-28 shrink-0 relative`}>
+                {state.board.map((t, i) => {
+                  const meta = t.revealed ? RESULT_META[t.result] : null;
+                  return (
+                  <motion.div key={i}
+                    initial={t.revealed ? { rotateY: 180, scale: 0.85, opacity: 0 } : { opacity: 0, y: 10 }}
+                    animate={{ rotateY: 0, scale: 1, opacity: 1, y: 0 }}
+                    transition={{ duration: t.revealed ? 0.7 : 0.35, ease: "easeOut" }}
+                    className={`wood-tile ${t.revealed && t.actual ? `wood-tile-${t.actual.rarity}` : "wood-tile-3"} p-2 w-24 sm:w-28 shrink-0 relative`}
+                    style={ meta ? { boxShadow: `0 0 22px ${meta.halo}, 0 0 4px ${meta.halo} inset` } : undefined }
+                    data-testid={`board-tile-${i}`}>
                     {t.result === "passed_lie" && !t.revealed && (
                       <div className="absolute -inset-1 rounded-full pointer-events-none chi-glow"
                            style={{ background: "radial-gradient(circle, rgba(255,215,0,0.3), transparent 70%)" }} />
@@ -254,13 +294,19 @@ export const PokerGame = () => {
                     {t.revealed && t.actual ? (
                       <div className="mt-1">
                         <div className="font-['Space_Mono'] text-xs text-[#FFD700]">{t.actual.name}</div>
-                        <div className="text-[10px] text-[#f4efe6]/70">{t.result?.replace("_"," ")}</div>
+                        {meta && (
+                          <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-['Bebas_Neue'] tracking-widest text-[9px]"
+                               style={{ background: `${meta.color}26`, color: meta.color, border: `1px solid ${meta.color}66` }}>
+                            <span>{meta.icon}</span><span>{meta.label}</span>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="text-center mt-2 font-['Shojumaru'] text-[#8C7356]">⟁</div>
                     )}
-                  </div>
-                ))}
+                  </motion.div>
+                  );
+                })}
                 {state.pending_play && (
                   <div className="wood-tile wood-tile-3 p-2 w-24 sm:w-28 chi-glow shrink-0" data-testid="pending-tile">
                     <div className="text-[10px] text-[#f4efe6]/70">{state.pending_play.player_name} slid:</div>
