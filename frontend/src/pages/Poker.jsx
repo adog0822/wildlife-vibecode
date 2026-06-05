@@ -29,16 +29,21 @@ const PokerLobby = () => {
     <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(180deg,#2a1808,#06030a)" }} data-testid="poker-lobby">
       <div className="max-w-md w-full parchment parchment-edge rounded-md p-8 unroll mx-4">
         <div className="font-['Pirata_One'] text-4xl text-[#2C241B] text-center">Ecosystem Poker</div>
-        <div className="font-['Cinzel'] italic text-[#5C5042] text-center mb-6">Enter the lodge</div>
+        <div className="font-['Cinzel'] italic text-[#5C5042] text-center mb-2">Enter the lodge</div>
+        <div className="font-['Space_Mono'] text-xs text-[#8C7356] text-center mb-5">
+          2–8 players. Host opens a room, then shares the code or link with friends. Each player joins on their own device.
+        </div>
         <label className="block font-['Bebas_Neue'] tracking-widest text-sm text-[#5C5042] mb-1">Your Name</label>
         <input data-testid="lobby-name" value={name} onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && (code.trim() ? join() : host())}
           className="w-full px-3 py-2 mb-4 border border-[#8C7356] rounded bg-[#F4EFE6] text-[#2C241B]" placeholder="Scholar" />
-        <button onClick={host} data-testid="host-room" className="btn-chi w-full mb-3">Host a New Game</button>
-        <div className="text-center text-[#5C5042] my-2">— or —</div>
-        <label className="block font-['Bebas_Neue'] tracking-widest text-sm text-[#5C5042] mb-1">Room Code</label>
-        <input data-testid="lobby-code" value={code} onChange={(e) => setCode(e.target.value)}
-          className="w-full px-3 py-2 mb-3 border border-[#8C7356] rounded bg-[#F4EFE6] text-[#2C241B] uppercase tracking-widest" placeholder="ABCD" />
-        <button onClick={join} data-testid="join-room" className="btn-wood w-full">Join Game</button>
+        <button onClick={host} data-testid="host-room" className="btn-chi w-full mb-3">🎲 Host a New Game</button>
+        <div className="text-center text-[#5C5042] my-2 font-['Cinzel'] italic text-xs">— or join an existing room —</div>
+        <label className="block font-['Bebas_Neue'] tracking-widest text-sm text-[#5C5042] mb-1">4-Letter Room Code</label>
+        <input data-testid="lobby-code" value={code} onChange={(e) => setCode(e.target.value.toUpperCase().slice(0,4))}
+          onKeyDown={(e) => e.key === "Enter" && join()}
+          className="w-full px-3 py-2 mb-3 border-2 border-[#8C7356] rounded bg-[#F4EFE6] text-[#2C241B] uppercase tracking-[0.4em] text-center text-2xl font-['Pirata_One']" placeholder="ABCD" maxLength={4} />
+        <button onClick={join} disabled={!code.trim()} data-testid="join-room" className="btn-wood w-full disabled:opacity-50">Join Game</button>
         <button onClick={() => navigate("/games")} className="block mx-auto mt-4 text-[#5C5042] text-sm" data-testid="lobby-back">← Back to Games</button>
       </div>
       <SaolaGuide context="lobby for ecosystem poker" />
@@ -152,10 +157,37 @@ export const PokerGame = () => {
         </div>
 
         {state.state === "lobby" && (
-          <div className="parchment parchment-edge rounded-md p-6 unroll text-center mb-4">
+          <div className="parchment parchment-edge rounded-md p-6 unroll text-center mb-4 max-w-2xl mx-auto">
             <div className="font-['Pirata_One'] text-3xl text-[#2C241B] mb-2">Waiting in the lodge</div>
-            <div className="font-['Cinzel'] text-[#5C5042] mb-4">Share room code <b>{state.code}</b> with friends.</div>
-            <button onClick={start} className="btn-chi" data-testid="start-game">Start Game</button>
+            <div className="font-['Bebas_Neue'] tracking-[0.3em] text-xs text-[#8C7356] mt-3 mb-1">SHARE THIS CODE</div>
+            <div className="inline-block bg-[#1c0e06] border-2 border-[#FFD700] rounded px-6 py-3 text-5xl font-['Pirata_One'] text-[#FFD700] tracking-[0.4em]"
+                 style={{ textShadow: "0 0 18px rgba(255,140,0,0.7)" }}
+                 data-testid="room-code-display">
+              {state.code}
+            </div>
+            <div className="mt-3 flex items-center gap-2 justify-center flex-wrap">
+              <button onClick={() => { navigator.clipboard?.writeText(state.code); }}
+                      className="btn-wood text-sm" data-testid="copy-code">📋 Copy Code</button>
+              <button onClick={() => {
+                const url = `${window.location.origin}/poker/${state.code}`;
+                if (navigator.share) {
+                  navigator.share({ title: "Join my LoxeLife game!", text: `Code: ${state.code}`, url });
+                } else { navigator.clipboard?.writeText(url); }
+              }} className="btn-wood text-sm" data-testid="copy-link">🔗 Copy Link</button>
+            </div>
+            <div className="font-['Cinzel'] italic text-[#5C5042] text-sm mt-4">
+              Players in the lodge: <b>{state.players.length}</b> · Need at least 2
+            </div>
+            <div className="mt-2 flex justify-center gap-2 flex-wrap">
+              {state.players.map((p) => (
+                <span key={p.id} className="bg-[#FFD700]/15 border border-[#8C7356] rounded-full px-3 py-1 font-['Bebas_Neue'] tracking-widest text-xs text-[#2C241B]">
+                  {p.name}{p.is_host ? " 👑" : ""}
+                </span>
+              ))}
+            </div>
+            {state.players.length >= 2 && (
+              <button onClick={start} className="btn-chi mt-5 text-lg" data-testid="start-game">Start the Game →</button>
+            )}
           </div>
         )}
 
@@ -172,7 +204,20 @@ export const PokerGame = () => {
               <div className="font-['Bebas_Neue'] tracking-widest text-sm text-[#f4efe6]/80 mb-2">ECOSYSTEM</div>
               <div className="flex gap-2 overflow-x-auto sm:flex-wrap" data-testid="board-tiles">
                 {state.board.map((t, i) => (
-                  <div key={i} className={`wood-tile ${t.revealed && t.actual ? `wood-tile-${t.actual.rarity}` : "wood-tile-3"} p-2 w-24 sm:w-28 shrink-0`}>
+                  <div key={i} className={`wood-tile ${t.revealed && t.actual ? `wood-tile-${t.actual.rarity}` : "wood-tile-3"} p-2 w-24 sm:w-28 shrink-0 relative`}>
+                    {t.result === "passed_lie" && !t.revealed && (
+                      <div className="absolute -inset-1 rounded-full pointer-events-none chi-glow"
+                           style={{ background: "radial-gradient(circle, rgba(255,215,0,0.3), transparent 70%)" }} />
+                    )}
+                    {t.actual?.spirit_kind === "eclipse" && (
+                      <svg viewBox="0 0 60 60" className="absolute -top-3 -right-3 w-8 h-8 pointer-events-none">
+                        <circle cx="30" cy="30" r="22" fill="none" stroke="#FFD700" strokeWidth="2" />
+                        <circle cx="30" cy="30" r="16" fill="#1a0e04" />
+                        <circle cx="30" cy="30" r="22" fill="none" stroke="#FF8C00" strokeWidth="1" opacity="0.5">
+                          <animate attributeName="r" values="22;28;22" dur="2s" repeatCount="indefinite" />
+                        </circle>
+                      </svg>
+                    )}
                     <div className="text-[10px] text-[#f4efe6]/70">{t.player_name} claimed:</div>
                     <div className="font-['Pirata_One'] text-sm text-[#f4efe6]">{t.claim}</div>
                     {t.revealed && t.actual ? (

@@ -66,3 +66,14 @@ test their knowledge in trials, and bluff their way through cocktail-party multi
 - ✅ **Mobile Poker**: hand becomes horizontal-scroll on mobile, header text scales, harmony meter shrinks, board tiles horizontal-scroll
 - ✅ **Daily Quest System**: "The Saola's Daily Prophecy" — seeded by date, picks an undiscovered 4-5★ animal, displays hint banner on Home, auto-marks complete when that animal is unlocked
 - ✅ **Shareable Discovery Card**: html-to-image generates PNG of the unlocked animal page (4★+); web-share API for mobile, falls back to download
+
+## Iteration 4 (2026-02-05 — Depth + Sound + Playability)
+- ✅ **2D explorable biomes** (6400×2400 scenes) with drag-pan in both axes, scroll/WASD/buttons to "step forward/backward" (zoom 75–220%), pinch-zoom on touch, footstep SFX
+- ✅ **Per-biome unique wildlife sprites**: savanna lions+grass, dunes scorpions+dust devils, canopy butterflies+monkeys+falling leaves, peaks eagles+yaks+snow, woods owls+deer+fireflies, outback kangaroos hopping+bird, wastes penguins+aurora+50 snowflakes, ocean fish+jellyfish+shark
+- ✅ **Per-biome animated reveal styles**: walk-left (savanna), rise-from-sand (dunes), swing-down (canopy), fade-from-snow (peaks), step-from-trees (woods), hop-in (outback), waddle-in (wastes), swim-in (ocean)
+- ✅ **Per-biome unique soundscapes**: brown-noise base + biome-specific filter + LFO pad + random event generator (crickets+roars for savanna, drops+monkey calls for canopy, whales+bubbles for ocean, owls+leaf rustles for woods, kookaburras+didgeridoo drone for outback, etc.) firing every 3-9s
+- ✅ **Singleplayer**: `playDing` on correct (with Saola lantern flare), dramatic `playWrong` + red flash + shake + delayed game-over reveal; personal best tracked in localStorage; "Records" link to leaderboard
+- ✅ **Scholar's Leaderboard page** at `/scholar/leaderboard` — top 10 trials with timestamps, personal best big display
+- ✅ **Eclipse spirit tile** visual: chi-eclipse SVG ring renders on board tiles (dark center + gold ring pulse)
+- ✅ **Poker lobby revamp**: big room code display, COPY CODE / COPY LINK with web-share fallback, "2-8 players" instructions, player pill list, "Need at least 2" guidance, Start only enabled with ≥2 players
+- ✅ **Mobile-tuned hotspot tap radius**: 44px+ on mobile widths (<640px) per accessibility guidelines

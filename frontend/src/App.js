@@ -9,6 +9,7 @@ import AnimalDetail from "@/pages/AnimalDetail";
 import Games from "@/pages/Games";
 import Singleplayer from "@/pages/Singleplayer";
 import PokerLobby, { PokerGame } from "@/pages/Poker";
+import ScholarLeaderboard from "@/pages/ScholarLeaderboard";
 import MuteToggle from "@/components/MuteToggle";
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
           <Route path="/animal/:id" element={<AnimalDetail />} />
           <Route path="/games" element={<Games />} />
           <Route path="/singleplayer" element={<Singleplayer />} />
+          <Route path="/scholar/leaderboard" element={<ScholarLeaderboard />} />
           <Route path="/poker" element={<PokerLobby />} />
           <Route path="/poker/:code" element={<PokerGame />} />
         </Routes>
