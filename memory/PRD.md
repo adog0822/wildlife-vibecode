@@ -77,3 +77,13 @@ test their knowledge in trials, and bluff their way through cocktail-party multi
 - ✅ **Eclipse spirit tile** visual: chi-eclipse SVG ring renders on board tiles (dark center + gold ring pulse)
 - ✅ **Poker lobby revamp**: big room code display, COPY CODE / COPY LINK with web-share fallback, "2-8 players" instructions, player pill list, "Need at least 2" guidance, Start only enabled with ≥2 players
 - ✅ **Mobile-tuned hotspot tap radius**: 44px+ on mobile widths (<640px) per accessibility guidelines
+
+## Iteration 5 (2026-02-05 — Biome Exploration Polish)
+- ✅ **Pokémon-style WASD walk + on-screen D-pad** with smooth lerp/easing camera (0.12 EASE factor, 18px/frame walk speed) — feels like walking through the biome
+- ✅ **Crisp sharp backdrops** at 3840px res, removed blur filters; mid-layer is sharp multiply blend for depth without losing focus
+- ✅ **Silhouette-to-photo morph hotspots** — each hotspot shows the REAL Wikipedia animal photo as a black silhouette by default (CSS filter: brightness 0.05, saturate 0, contrast 2), morphs to full-color photo on hover via 0.45s tween
+- ✅ **NatGeo SafariWildlife component** — biome-specific real animal photos cross the scene in loop (lions/zebras/giraffes on savanna, dolphins/whales swimming in ocean, kangaroos hopping in outback, penguins waddling in wastes, condors flying over peaks)
+- ✅ **Clickable minimap** — click anywhere on the minimap to jump camera there
+- ✅ **All hotspots reachable** — initial camera centered, full 8000×3000 scene navigable in all 4 directions
+- ✅ Fixed `navigator.share` AbortError silently ignored on user-cancel (Animal Detail share + Poker copy-link)
+- ✅ Poker: Always-visible Start button (disabled w/ player-count message), live join-pop animation + chi sound on join, ROLE banner (Warden vs Saboteur), HOW TO WIN cheat-sheet in lobby
