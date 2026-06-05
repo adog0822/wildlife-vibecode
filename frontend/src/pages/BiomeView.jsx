@@ -22,6 +22,45 @@ const FALLBACK_BG = {
   ocean: `https://images.unsplash.com/photo-1583212292454-1fe6229603b7${Q}`,
 };
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "";
+
+// ============== CRISP SVG FOREGROUND PARALLAX LAYERS PER BIOME ==============
+// Bold cel-shaded silhouettes anchored at viewport bottom, tiled horizontally,
+// parallax FASTER than the AI bg → diorama / Madagascar puppet-theater depth.
+// Each entry is the INNER SVG content (no outer <svg>).
+const FG_SVG_STR = {
+  savanna: `
+    <path d='M0,240 L0,180 Q120,120 220,160 T420,150 T600,170 T820,140 T1020,160 T1240,150 T1440,170 L1600,160 L1600,240 Z' fill='%231a0f04' stroke='%23000' stroke-width='2'/>
+    ${Array.from({length:48}).map((_,i)=>`<path d='M${i*34+10},${190+Math.round(Math.sin(i)*4)} l-4,-30 l8,0 l-4,30' stroke='%231a0f04' stroke-width='2.5' fill='none' stroke-linecap='round'/>`).join("")}
+  `,
+  dunes: `
+    <path d='M0,240 L0,200 Q200,160 400,180 T800,170 T1200,190 T1600,180 L1600,240 Z' fill='%233a1c08' stroke='%23000' stroke-width='2'/>
+    <path d='M0,240 L0,220 Q300,200 600,215 T1200,210 T1600,220 L1600,240 Z' fill='%231a0f04' stroke='%23000' stroke-width='1.5'/>
+  `,
+  canopy: `
+    <path d='M0,240 L0,140 Q100,100 180,130 Q260,90 360,120 Q450,80 540,110 Q650,90 740,130 Q830,100 920,120 Q1020,90 1120,130 Q1220,100 1320,120 Q1420,90 1520,130 Q1580,110 1600,130 L1600,240 Z' fill='%230a2a14' stroke='%23000' stroke-width='2'/>
+    ${Array.from({length:14}).map((_,i)=>`<g transform='translate(${i*115+30},200)'><path d='M0,40 L0,0 M-12,30 L12,30 M-16,20 L16,20 M-12,10 L12,10 M-8,2 L8,2' stroke='%230a2a14' stroke-width='3' stroke-linecap='round'/></g>`).join("")}
+  `,
+  peaks: `
+    <path d='M0,240 L0,180 L160,80 L280,160 L460,60 L620,150 L780,90 L940,140 L1120,70 L1280,150 L1440,80 L1600,170 L1600,240 Z' fill='%231a2030' stroke='%23000' stroke-width='2.5'/>
+    <path d='M0,240 L0,210 L240,170 L500,200 L780,170 L1080,200 L1380,170 L1600,200 L1600,240 Z' fill='%2306080e' stroke='%23000' stroke-width='1.5'/>
+  `,
+  woods: `
+    <path d='M0,240 L0,200 Q200,180 400,200 T800,190 T1200,200 T1600,190 L1600,240 Z' fill='%231a0a04' stroke='%23000' stroke-width='2'/>
+    ${[80,420,820,1180,1480].map((x,i)=>`<g><rect x='${x}' y='40' width='22' height='200' fill='%230a0500' stroke='%23000' stroke-width='2'/><rect x='${x+3}' y='80' width='16' height='6' fill='%233a2418'/><rect x='${x+3}' y='130' width='16' height='6' fill='%233a2418'/><rect x='${x+3}' y='180' width='16' height='6' fill='%233a2418'/></g>`).join("")}
+  `,
+  outback: `
+    <path d='M0,240 L0,200 Q150,170 280,195 Q450,170 600,200 Q780,175 940,200 Q1120,170 1280,200 Q1450,175 1600,200 L1600,240 Z' fill='%233a0d02' stroke='%23000' stroke-width='2'/>
+    ${Array.from({length:36}).map((_,i)=>`<path d='M${i*45+20},${198+Math.round(Math.sin(i*1.3)*3)} l-5,-22 m5,22 l5,-24' stroke='%233a0d02' stroke-width='2.5' fill='none' stroke-linecap='round'/>`).join("")}
+  `,
+  wastes: `
+    <path d='M0,240 L0,200 L120,170 L260,210 L400,180 L560,200 L720,170 L880,210 L1040,180 L1200,200 L1360,170 L1520,210 L1600,200 L1600,240 Z' fill='%231a2538' stroke='%23000' stroke-width='2'/>
+    ${[180,540,980,1380].map((x,i)=>`<polygon points='${x},200 ${x+25},160 ${x+50},200 ${x+25},230' fill='%23243650' stroke='%23000' stroke-width='2'/>`).join("")}
+  `,
+  ocean: `
+    <path d='M0,240 L0,200 Q200,180 400,195 T800,185 T1200,200 T1600,190 L1600,240 Z' fill='%23021a3a' stroke='%23000' stroke-width='2'/>
+    ${[140,380,640,920,1180,1440].map((x,i)=>`<g transform='translate(${x},200)'><path d='M0,40 Q-8,0 0,-30 Q8,-50 0,-80 M-12,30 Q-6,10 -12,-20 M12,30 Q6,10 12,-20' stroke='%23021a3a' stroke-width='3.5' fill='none' stroke-linecap='round'/><ellipse cx='0' cy='0' rx='14' ry='6' fill='%23021a3a'/></g>`).join("")}
+  `,
+};
 const BIOMES = {
   savanna: {
     label: "Sun-Baked Savanna", tagline: "Walk through the golden grass. The grass hides golden eyes.",
@@ -561,6 +600,34 @@ const BiomeView = () => {
              style={{
                backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.85'/></svg>\")",
                backgroundSize: "260px 260px",
+             }} />
+
+        {/* === CRISP FOREGROUND SILHOUETTE PARALLAX === */}
+        {/* Diorama / Madagascar puppet-theater depth: tile 1600px wide, parallax FASTER than bg */}
+        <div className="absolute pointer-events-none"
+             style={{
+               left: 0, bottom: 0, width: sceneW * 1.05, height: 240,
+               transform: `translate3d(${cam.x * 1.0}px, ${cam.y * 0.15}px, 0)`,
+               willChange: "transform",
+               filter: night ? "brightness(0.4) saturate(0.8)" : "brightness(1)",
+             }}>
+          {/* Repeat the SVG horizontally across the long scene */}
+          <div style={{
+            position: "absolute", inset: 0,
+            backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(
+              `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 240' preserveAspectRatio='xMidYEnd slice'>${FG_SVG_STR[key] || FG_SVG_STR.savanna}</svg>`
+            )}")`,
+            backgroundRepeat: "repeat-x",
+            backgroundSize: "1600px 240px",
+            backgroundPosition: "bottom",
+          }} />
+        </div>
+
+        {/* Subtle ground gradient ABOVE the foreground silhouette — grounds it visually */}
+        <div className="absolute inset-x-0 pointer-events-none"
+             style={{
+               bottom: 180, height: 90,
+               background: `linear-gradient(180deg, transparent 0%, ${biome.accentDeep}66 100%)`,
              }} />
 
         {/* Foreground — NatGeo wildlife crossing + hotspots */}

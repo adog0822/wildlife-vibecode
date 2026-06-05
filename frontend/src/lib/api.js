@@ -23,6 +23,16 @@ export const fetchScholarRound = async () => {
   return data;
 };
 
+export const fetchLeaderboard = async (limit = 10) => {
+  const { data } = await axios.get(`${API}/leaderboard`, { params: { limit } });
+  return data;
+};
+
+export const submitLeaderboard = async ({ name, score, biome }) => {
+  const { data } = await axios.post(`${API}/leaderboard`, { name, score, biome });
+  return data;
+};
+
 export const createPokerRoom = async () => {
   const { data } = await axios.post(`${API}/poker/create`);
   return data;

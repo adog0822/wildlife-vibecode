@@ -1,0 +1,42 @@
+{
+  "summary": "Verified Scholar's Trial global leaderboard (backend + frontend) and biome route rendering. Found and fixed one CRITICAL backend bug: POST /api/leaderboard was returning HTTP 500 because Mongo's insert_one mutates the inserted dict with an ObjectId _id, which then failed FastAPI's JSON serialization. After fix, all 10 backend tests pass and frontend auto-submission from Singleplayer game-over works end-to-end.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_leaderboard.py",
+    "/app/test_reports/pytest/leaderboard_results.xml"
+  ],
+  "action_items": [
+    "(Optional, not blocking) Singleplayer.jsx uses getPlayerName() from lib/storage which fell through to 'Anonymous Scholar' in our test even after we set localStorage['player.name']. Confirm the storage key naming so user-set player names actually attach to their leaderboard entries instead of always submitting as 'Anonymous Scholar'."
+  ],
+  "critical_code_review_comments": [
+    "FIXED: server.py submit_leaderboard mutated `doc` via insert_one which adds _id (ObjectId). FastAPI's jsonable_encoder then choked on ObjectId. Added `doc.pop('_id', None)` before returning. Standard MongoDB ObjectId hygiene.",
+    "Singleplayer auto-submission only fires when finalScore > 0 (line 70). This is fine but means a player who loses on round 1 never appears on the leaderboard — that may or may not be desired UX.",
+    "Leaderboard has no DELETE/cleanup endpoint, so accumulated TEST_/Anonymous Scholar entries will grow forever. Consider adding a TTL index or admin purge for non-seed entries older than N days."
+  ],
+  "updated_files": [
+    "/app/backend/server.py (fixed ObjectId serialization in submit_leaderboard)",
+    "/app/backend/tests/test_leaderboard.py (new file: 10 pytest tests covering GET, POST, persistence, score clamping, biome bg cache, static image serving)"
+  ],
+  "success_rate": {"backend": "100% (10/10 tests pass)", "frontend": "100% (all 5 review items verified)"},
+  "test_credentials": "N/A — no auth required for these flows",
+  "seed_data_creation": "MongoDB db.leaderboard auto-seeds 10 mythic scholars on first GET /api/leaderboard if empty (verified working). Test data created during run was cleaned up post-test.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend bug in POST /api/leaderboard (ObjectId not iterable) is fixed. Backend test file at /app/backend/tests/test_leaderboard.py is the regression suite for leaderboard + biome bg. Charles D.=42 is the #1 SEED entry (use the seed_entries filter pattern, not entries[0], because high-score non-seed submissions can outrank seeds). All 8 biome bg pngs are cached on disk at /app/backend/static/biome_bg/. Singleplayer auto-submission was verified end-to-end: played a round to streak=1, clicked wrong, game-over triggered, non-seed entry appeared in /api/leaderboard with score=1.",
+  "verified_review_items": [
+    "(1) GET /api/leaderboard?limit=10 returns 10 seeded entries sorted desc, Charles D.=42 is #1 among seeds — PASS",
+    "(2) POST /api/leaderboard returns top[] including submission; subsequent GET includes it — PASS (after ObjectId fix)",
+    "(3) /scholar/leaderboard renders SANCTUARY HALL OF SCHOLARS parchment with data-testid='global-leaderboard-list' containing 10 rows (global-row-1 through global-row-10), row 1 shows 🥇 Charles D. 42 — PASS",
+    "(4) /biome/savanna, /biome/ocean, /biome/peaks all render with data-testid='biome-{key}' and show new AI cel-shaded bg art — PASS",
+    "(5) Singleplayer game-over auto-submits via POST /api/leaderboard, new non-seed entry appears in /scholar/leaderboard with score and biome — PASS"
+  ],
+  "rca of the issue": "ROOT CAUSE: motor's insert_one() mutates the input dict in-place to attach the generated MongoDB _id (ObjectId). The endpoint then returned `{**doc}` — a shallow copy that still contained the ObjectId. FastAPI's jsonable_encoder cannot serialize ObjectId, raising TypeError: 'ObjectId' object is not iterable. REPRODUCTION: curl -X POST /api/leaderboard -d '{\"name\":\"x\",\"score\":1}' returned HTTP 500. MITIGATION: doc.pop('_id', None) before returning. Long-term: use a Pydantic response_model with `model_config = {arbitrary_types_allowed: False}` and explicit fields, or project _id away."
+}

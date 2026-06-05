@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchScholarRound } from "../lib/api";
+import { fetchScholarRound, submitLeaderboard } from "../lib/api";
 import { getWikiImage } from "../lib/wikiImage";
 import { playDing, playWrong, playChi } from "../lib/sfx";
 import { setSaolaMood } from "../lib/saolaBus";
+import { getPlayerName } from "../lib/storage";
 import SaolaGuide from "../components/SaolaGuide";
 
 const BEST_KEY = "scholar.best";
@@ -65,6 +66,12 @@ const Singleplayer = () => {
           setBest(finalScore); setBestState(finalScore); setNewRecord(true);
         }
         recordScore(finalScore);
+        // Submit to global leaderboard (fire-and-forget)
+        if (finalScore > 0) {
+          const playerName = getPlayerName() || "Anonymous Scholar";
+          submitLeaderboard({ name: playerName, score: finalScore, biome: round?.options?.[0]?.region })
+            .catch(() => {});
+        }
         setGameOver(true);
       }, 1500);
     }

@@ -91,6 +91,59 @@ async def scholar_round():
     return payload
 
 
+# ============== SCHOLAR'S TRIAL — GLOBAL LEADERBOARD ==============
+
+# Seeded mythic scholars — anchor the leaderboard so it never feels empty
+SEED_SCHOLARS = [
+    {"name": "Charles D.",       "score": 42, "biome": "canopy",  "seed": True},
+    {"name": "Jane G.",          "score": 38, "biome": "canopy",  "seed": True},
+    {"name": "David A.",         "score": 35, "biome": "wastes",  "seed": True},
+    {"name": "Sir Lonesome",     "score": 31, "biome": "outback", "seed": True},
+    {"name": "Audubon",          "score": 28, "biome": "woods",   "seed": True},
+    {"name": "Tashi the Sherpa", "score": 24, "biome": "peaks",   "seed": True},
+    {"name": "Captain Calypso",  "score": 22, "biome": "ocean",   "seed": True},
+    {"name": "Saola Apprentice", "score": 19, "biome": "savanna", "seed": True},
+    {"name": "Field Cadet",      "score": 14, "biome": "dunes",   "seed": True},
+    {"name": "Curious Scholar",  "score":  9, "biome": "savanna", "seed": True},
+]
+
+class LeaderboardSubmission(BaseModel):
+    name: str
+    score: int
+    biome: Optional[str] = None
+
+async def _ensure_leaderboard_seeded():
+    coll = db["leaderboard"]
+    count = await coll.count_documents({"seed": True})
+    if count == 0:
+        now = datetime.now(timezone.utc).isoformat()
+        await coll.insert_many([{**s, "at": now} for s in SEED_SCHOLARS])
+
+@api_router.get("/leaderboard")
+async def get_leaderboard(limit: int = 10):
+    await _ensure_leaderboard_seeded()
+    cursor = db["leaderboard"].find({}, {"_id": 0}).sort("score", -1).limit(max(1, min(limit, 50)))
+    entries = [doc async for doc in cursor]
+    return {"entries": entries, "count": len(entries)}
+
+@api_router.post("/leaderboard")
+async def submit_leaderboard(sub: LeaderboardSubmission):
+    name = sub.name.strip()[:24] or "Anonymous Scholar"
+    score = max(0, min(int(sub.score), 9999))
+    doc = {
+        "name": name, "score": score, "biome": sub.biome,
+        "seed": False, "at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db["leaderboard"].insert_one(doc)
+    # strip Mongo ObjectId from the inserted doc before returning
+    doc.pop("_id", None)
+    # return updated top-10 so client can show its rank
+    cursor = db["leaderboard"].find({}, {"_id": 0}).sort("score", -1).limit(10)
+    top = [d async for d in cursor]
+    return {"submitted": doc, "top": top}
+
+
+
 # ============== SAOLA AI CHAT ==============
 
 class SaolaChatRequest(BaseModel):
@@ -508,14 +561,14 @@ BIOME_BG_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/api/static", StaticFiles(directory=str(ROOT_DIR / "static")), name="static")
 
 BIOME_PROMPTS = {
-    "savanna": "Cinematic painterly watercolor landscape of an African savanna at golden hour, acacia trees silhouetted against amber sky, distant mountains, atmospheric haze, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9, hand-painted brush strokes, vibrant golden and orange palette",
-    "dunes": "Cinematic painterly watercolor landscape of vast Saharan dunes at twilight, shimmering amber sand waves, distant rocky outcrops, deep starry indigo sky just beginning, atmospheric heat shimmer, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9",
-    "canopy": "Cinematic painterly watercolor landscape of a misty Amazon rainforest canopy, sun rays piercing through layers of emerald leaves, hanging vines, mossy buttress roots, drifting fog between trees, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9, lush oversaturated greens",
-    "peaks": "Cinematic painterly watercolor landscape of Himalayan snow peaks at dawn, prayer flags fluttering on a rocky ridge, jagged glacial mountains, icy blue and stark white tones with chi-glow gold light, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9",
-    "woods": "Cinematic painterly watercolor landscape of a temperate European forest at twilight, auburn fallen leaves, moss-covered birch trunks, twilight shadows, scattered fireflies, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9, rich auburn and mossy green palette",
-    "outback": "Cinematic painterly watercolor landscape of the Australian outback at sunset, cracked deep-red clay earth, eucalyptus trees silhouetted, Uluru-like rock formation in the distance, dusty haze, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9",
-    "wastes": "Cinematic painterly watercolor landscape of the Antarctic ice shelf at night, aurora curtain shimmering green-pink across the sky over a glacial bay, icebergs catching moonlight, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9, glacial crystal blue palette",
-    "ocean": "Cinematic painterly watercolor underwater scene, sunlight rays piercing deep navy water, coral pinks and bioluminescent silhouettes drifting, kelp swaying, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9, deep oceanic mystery",
+    "savanna": "Mid-to-far distance landscape view of an African savanna at golden hour, looking across vast empty grass plains toward distant acacia trees on the HORIZON ONLY, towering thunderclouds catching warm sunset light, no foreground objects, no foreground trees, no foreground rocks, lower third of frame is empty rolling grass, bold cel-shaded illustration with thick black ink outlines, deep saturated amber and ochre palette, Madagascar movie style mixed with National Geographic cinematic lighting, dramatic side-lit composition, ultra-wide 16:9, no humans, no text, no UI",
+    "dunes": "Mid-to-far distance landscape of vast desert dunes at twilight, sweeping S-curve dune ridges receding into deep purple horizon, distant rocky mesa silhouette, no foreground objects, no foreground rocks, lower third of frame is smooth empty sand, first stars emerging in violet sky, bold cel-shaded illustration with thick black ink outlines, deep saturated amber-sand and violet palette, Madagascar movie style mixed with National Geographic cinematic lighting, ultra-wide 16:9, no humans, no text, no UI",
+    "canopy": "Mid-to-far distance view INSIDE a rainforest clearing, looking out over a mossy forest floor toward layered jungle canopy in the background, soft beams of sun through canopy, distant waterfall barely visible through mist, no foreground vines, no foreground leaves, lower third of frame is open clearing with low ferns only, bold cel-shaded illustration with thick black ink outlines, ultra-saturated emerald and teal palette with gold light shafts, Madagascar movie style mixed with National Geographic cinematic lighting, ultra-wide 16:9, no humans, no text, no UI",
+    "peaks": "Mid-to-far distance landscape of Himalayan snow peaks at dawn, jagged mountain range receding into pink-gold sunrise, distant glacial lake at base, low mist in valley, no foreground rocks, no foreground flags, lower third of frame is open snow plateau, bold cel-shaded illustration with thick black ink outlines, deep saturated ice-blue and rose-gold palette, Madagascar movie style mixed with National Geographic cinematic lighting, ultra-wide 16:9, no humans, no text, no UI",
+    "woods": "Mid-to-far distance view through a temperate autumn forest, looking down a clearing path between distant birch trunks, low warm shafts of evening light, drifting fall leaves in the air, no foreground tree trunks, no foreground branches, lower third of frame is empty leaf-littered ground, bold cel-shaded illustration with thick black ink outlines, deep saturated auburn-orange and burgundy palette with cool teal shadows, Madagascar movie style mixed with National Geographic cinematic lighting, ultra-wide 16:9, no humans, no text, no UI",
+    "outback": "Mid-to-far distance landscape of Australian outback at sunset, vast red-clay plain stretching to a massive distant monolith Uluru-like rock formation, lone eucalyptus trees on horizon only, no foreground rocks, no foreground vegetation, lower third of frame is open cracked red earth, bold cel-shaded illustration with thick black ink outlines, deep saturated crimson-red and dusty pink palette, Madagascar movie style mixed with National Geographic cinematic lighting, ultra-wide 16:9, no humans, no text, no UI",
+    "wastes": "Mid-to-far distance landscape of Antarctic ice shelf at night, vast frozen sea with distant tabular icebergs catching aurora light, brilliant teal-pink-green aurora curtain dominating the sky, full moon, no foreground ice, no foreground icebergs, lower third of frame is smooth flat ice, bold cel-shaded illustration with thick black ink outlines, deep saturated cyan and magenta aurora palette over indigo, Madagascar movie style mixed with National Geographic cinematic lighting, ultra-wide 16:9, no humans, no text, no UI",
+    "ocean": "Mid-water underwater view across an open coral reef, looking out from a clear sandy floor toward a distant coral wall and the open blue beyond, sun rays piercing from above, schools of small fish silhouettes far away, no foreground coral, no foreground kelp, lower third of frame is smooth empty sand floor, bold cel-shaded illustration with thick black ink outlines, deep saturated turquoise and coral-pink palette, Madagascar movie style mixed with National Geographic cinematic lighting, ultra-wide 16:9, no humans, no text, no UI",
 }
 
 async def _generate_biome_bg(biome_key: str, prompt: str) -> str:
@@ -526,7 +579,7 @@ async def _generate_biome_bg(biome_key: str, prompt: str) -> str:
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
             session_id=f"bg-gen-{biome_key}-{uuid.uuid4()}",
-            system_message="You are a Studio Ghibli-trained painter producing ultra-wide watercolor landscapes for a wildlife discovery game."
+            system_message="You are an illustrator producing wide cinematic landscape art that blends Madagascar/DreamWorks cel-shaded stylization with National Geographic dramatic lighting. Output bold ink outlines, deep saturated flat color regions with subtle internal gradients, and ALWAYS leave the lower third of the frame open and empty (no foreground objects)."
         ).with_model("gemini", "gemini-3.1-flash-image-preview").with_params(modalities=["image", "text"])
         _, images = await chat.send_message_multimodal_response(UserMessage(text=prompt))
         if not images:
