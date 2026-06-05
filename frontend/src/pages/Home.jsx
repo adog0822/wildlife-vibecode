@@ -143,6 +143,13 @@ const Home = () => {
         </button>
       </div>
 
+      {/* Preview-mode footer note — friendly heads-up for testers since this is a dev preview, not a 24/7 deployment */}
+      <div className="text-center mt-10 mb-4 px-4">
+        <div data-testid="preview-note" className="inline-block font-['Space_Mono'] text-[10px] text-[#8C7356]/70 italic border-t border-[#8C7356]/20 pt-2">
+          ⟁ Preview build — if anything stalls or won't load, simply refresh the page.
+        </div>
+      </div>
+
       <SaolaGuide context="user is on home/desk page" />
     </motion.div>
   );

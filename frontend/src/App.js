@@ -13,6 +13,7 @@ import PokerLobby, { PokerGame } from "@/pages/Poker";
 import ScholarLeaderboard from "@/pages/ScholarLeaderboard";
 import Analytics from "@/pages/Analytics";
 import MuteToggle from "@/components/MuteToggle";
+import WakeBanner from "@/components/WakeBanner";
 import { track } from "@/lib/track";
 
 // Fires a page_view on every route change. Mounted inside BrowserRouter.
@@ -29,6 +30,7 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <RouteTracker />
+        <WakeBanner />
         <MuteToggle />
         <Routes>
           <Route path="/" element={<Home />} />

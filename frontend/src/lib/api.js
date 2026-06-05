@@ -3,6 +3,44 @@ import axios from "axios";
 export const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
 
+// ============== GLOBAL 5xx AUTO-RETRY + WAKE-UP BANNER ==============
+// Preview pods hibernate when idle. First request after wakeup may 502 while the
+// backend boots. We silently retry once, then twice more with longer delays,
+// while broadcasting a "waking" event so a banner can reassure the visitor.
+const SLEEP = (ms) => new Promise((r) => setTimeout(r, ms));
+const wakeBus = { listeners: new Set() };
+export const onWakeStateChange = (cb) => {
+  wakeBus.listeners.add(cb);
+  return () => wakeBus.listeners.delete(cb);
+};
+const broadcast = (state) => wakeBus.listeners.forEach((cb) => { try { cb(state); } catch {} });
+
+axios.interceptors.response.use(
+  (res) => res,
+  async (err) => {
+    const cfg = err?.config;
+    const status = err?.response?.status;
+    const isOurApi = cfg?.url && cfg.url.startsWith(API);
+    const retriable = !status || status === 502 || status === 503 || status === 504;
+    if (!cfg || !isOurApi || !retriable) return Promise.reject(err);
+
+    cfg.__retryCount = (cfg.__retryCount || 0) + 1;
+    if (cfg.__retryCount > 3) {
+      broadcast({ status: "failed" });
+      return Promise.reject(err);
+    }
+    broadcast({ status: "waking", attempt: cfg.__retryCount });
+    await SLEEP(cfg.__retryCount * 1500); // 1.5s, 3s, 4.5s
+    try {
+      const out = await axios(cfg);
+      broadcast({ status: "ok" });
+      return out;
+    } catch (e) {
+      throw e;
+    }
+  }
+);
+
 export const fetchAnimals = async (region) => {
   const { data } = await axios.get(`${API}/animals`, { params: region ? { region } : {} });
   return data;
