@@ -9,8 +9,19 @@ import { startAmbient, stopAmbient, playUnlock, playChi, playFootstep, playAnima
 import { setSaolaMood } from "../lib/saolaBus";
 import SaolaGuide from "../components/SaolaGuide";
 
-// Hi-res Unsplash backdrops (no blur, sharp)
+// Hi-res Unsplash backdrops (sharp). AI-generated painterly bgs from backend override these when available.
 const Q = "?auto=format&fit=crop&w=3840&q=90";
+const FALLBACK_BG = {
+  savanna: `https://images.unsplash.com/photo-1547471080-7cc2caa01a7e${Q}`,
+  dunes: `https://images.unsplash.com/photo-1473580044384-7ba9967e16a0${Q}`,
+  canopy: `https://images.unsplash.com/photo-1518837695005-2083093ee35b${Q}`,
+  peaks: `https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99${Q}`,
+  woods: `https://images.unsplash.com/photo-1448375240586-882707db888b${Q}`,
+  outback: `https://images.unsplash.com/photo-1529108190281-9a4f620bc2d8${Q}`,
+  wastes: `https://images.unsplash.com/photo-1457269449834-928af64c684d${Q}`,
+  ocean: `https://images.unsplash.com/photo-1583212292454-1fe6229603b7${Q}`,
+};
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "";
 const BIOMES = {
   savanna: {
     label: "Sun-Baked Savanna", tagline: "Walk through the golden grass. The grass hides golden eyes.",
@@ -177,6 +188,7 @@ const BiomeView = () => {
   const [revealed, setRevealed] = useState(null);
   const [discovered, setDiscovered] = useState(new Set());
   const [images, setImages] = useState({});
+  const [aiBg, setAiBg] = useState(null);  // AI-painterly bg URL when available
   const [hoveredId, setHoveredId] = useState(null);
   const [showHint, setShowHint] = useState(true);
   const [zoom, setZoom] = useState(1.0);
@@ -201,6 +213,11 @@ const BiomeView = () => {
   useEffect(() => {
     fetchAnimals(key).then((d) => setAnimals(d.animals || []));
     startAmbient(biome.ambient);
+    // Try to load AI-painterly background from backend
+    fetch(`${BACKEND_URL}/api/biome_bg/${key}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.url) setAiBg(`${BACKEND_URL}${d.url}`); })
+      .catch(() => {});
     try { setDiscovered(new Set(JSON.parse(localStorage.getItem(`biome.discovered.${key}`) || "[]"))); } catch {}
     setShowHint(true);
     const t = setTimeout(() => setShowHint(false), 5500);
@@ -443,22 +460,22 @@ const BiomeView = () => {
         <div className="absolute inset-y-0 left-0"
              style={{
                width: sceneW * 1.4, height: sceneH * 1.1,
-               backgroundImage: `url(${biome.bg})`,
+               backgroundImage: `url(${bgUrl})`,
                backgroundSize: "cover", backgroundPosition: "center",
                transform: `translate3d(${cam.x * 0.35}px, ${cam.y * 0.5}px, 0)`,
                willChange: "transform",
-               filter: "saturate(1.2) contrast(1.1) brightness(0.9)",
+               filter: "saturate(1.15) contrast(1.05) brightness(0.92)",
              }} />
 
-        {/* Mid photo overlay — sharp this time (no blur), only multiplied for depth */}
+        {/* Mid photo overlay — adds real-world depth on top of painterly bg */}
         <div className="absolute inset-y-0 left-0"
              style={{
                width: sceneW * 1.15, height: sceneH * 1.05,
-               backgroundImage: `url(${biome.bg})`,
+               backgroundImage: `url(${midUrl})`,
                backgroundSize: "cover", backgroundPosition: "40% 60%",
                transform: `translate3d(${cam.x * 0.6}px, ${cam.y * 0.65}px, 0) scale(1.1)`,
                willChange: "transform",
-               opacity: 0.35,
+               opacity: aiBg ? 0.22 : 0.35,
                mixBlendMode: "multiply",
              }} />
 

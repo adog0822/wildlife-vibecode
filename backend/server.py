@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -494,6 +495,71 @@ async def resolve_play(room: PokerRoom):
 
 
 # ============== INIT ==============
+
+# Static file mount for AI-generated biome backgrounds
+BIOME_BG_DIR = ROOT_DIR / "static" / "biome_bg"
+BIOME_BG_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/api/static", StaticFiles(directory=str(ROOT_DIR / "static")), name="static")
+
+BIOME_PROMPTS = {
+    "savanna": "Cinematic painterly watercolor landscape of an African savanna at golden hour, acacia trees silhouetted against amber sky, distant mountains, atmospheric haze, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9, hand-painted brush strokes, vibrant golden and orange palette",
+    "dunes": "Cinematic painterly watercolor landscape of vast Saharan dunes at twilight, shimmering amber sand waves, distant rocky outcrops, deep starry indigo sky just beginning, atmospheric heat shimmer, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9",
+    "canopy": "Cinematic painterly watercolor landscape of a misty Amazon rainforest canopy, sun rays piercing through layers of emerald leaves, hanging vines, mossy buttress roots, drifting fog between trees, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9, lush oversaturated greens",
+    "peaks": "Cinematic painterly watercolor landscape of Himalayan snow peaks at dawn, prayer flags fluttering on a rocky ridge, jagged glacial mountains, icy blue and stark white tones with chi-glow gold light, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9",
+    "woods": "Cinematic painterly watercolor landscape of a temperate European forest at twilight, auburn fallen leaves, moss-covered birch trunks, twilight shadows, scattered fireflies, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9, rich auburn and mossy green palette",
+    "outback": "Cinematic painterly watercolor landscape of the Australian outback at sunset, cracked deep-red clay earth, eucalyptus trees silhouetted, Uluru-like rock formation in the distance, dusty haze, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9",
+    "wastes": "Cinematic painterly watercolor landscape of the Antarctic ice shelf at night, aurora curtain shimmering green-pink across the sky over a glacial bay, icebergs catching moonlight, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9, glacial crystal blue palette",
+    "ocean": "Cinematic painterly watercolor underwater scene, sunlight rays piercing deep navy water, coral pinks and bioluminescent silhouettes drifting, kelp swaying, no humans, no text, Studio Ghibli x Kung Fu Panda style, ultra wide 16:9, deep oceanic mystery",
+}
+
+async def _generate_biome_bg(biome_key: str, prompt: str) -> str:
+    """Generate one biome background via Gemini Nano Banana, save to disk, return public path."""
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        import base64
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"bg-gen-{biome_key}-{uuid.uuid4()}",
+            system_message="You are a Studio Ghibli-trained painter producing ultra-wide watercolor landscapes for a wildlife discovery game."
+        ).with_model("gemini", "gemini-3.1-flash-image-preview").with_params(modalities=["image", "text"])
+        _, images = await chat.send_message_multimodal_response(UserMessage(text=prompt))
+        if not images:
+            return ""
+        img_bytes = base64.b64decode(images[0]["data"])
+        out_path = BIOME_BG_DIR / f"{biome_key}.png"
+        with open(out_path, "wb") as f:
+            f.write(img_bytes)
+        return f"/api/static/biome_bg/{biome_key}.png"
+    except Exception as e:
+        logger.warning(f"bg gen failed for {biome_key}: {type(e).__name__}: {e}")
+        return ""
+
+@api_router.get("/biome_bg/{biome_key}")
+async def get_biome_bg(biome_key: str):
+    if biome_key not in BIOME_PROMPTS:
+        raise HTTPException(status_code=404, detail="Unknown biome")
+    path = BIOME_BG_DIR / f"{biome_key}.png"
+    if path.exists():
+        return {"url": f"/api/static/biome_bg/{biome_key}.png", "cached": True}
+    url = await _generate_biome_bg(biome_key, BIOME_PROMPTS[biome_key])
+    return {"url": url, "cached": False}
+
+@api_router.post("/biome_bg/regenerate/{biome_key}")
+async def regenerate_biome_bg(biome_key: str):
+    if biome_key not in BIOME_PROMPTS:
+        raise HTTPException(status_code=404, detail="Unknown biome")
+    url = await _generate_biome_bg(biome_key, BIOME_PROMPTS[biome_key])
+    return {"url": url}
+
+@api_router.get("/biome_bg")
+async def list_biome_bg():
+    """List which biome backgrounds are already cached on disk."""
+    out = {}
+    for k in BIOME_PROMPTS:
+        path = BIOME_BG_DIR / f"{k}.png"
+        out[k] = {"cached": path.exists(),
+                  "url": f"/api/static/biome_bg/{k}.png" if path.exists() else None}
+    return out
 
 @api_router.get("/")
 async def root():
