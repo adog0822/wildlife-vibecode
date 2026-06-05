@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import SaolaGuide from "../components/SaolaGuide";
+import { playChi } from "../lib/sfx";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -16,7 +18,8 @@ const Home = () => {
   const timeLabel = isNight ? "Night Watch" : (hour < 12 ? "Dawn Patrol" : (hour < 17 ? "Midday Expedition" : "Twilight Tracking"));
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden" style={{ background: "var(--color-desk)" }} data-testid="home-page">
+    <motion.div className="relative min-h-screen w-full overflow-hidden" style={{ background: "var(--color-desk)" }} data-testid="home-page"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
       <div className="absolute inset-0" style={{
         backgroundImage: "url(https://images.unsplash.com/photo-1619976553860-b7ffbe9a093b?auto=format&fit=crop&w=2400&q=80)",
         backgroundSize: "cover", backgroundPosition: "center"
@@ -52,7 +55,7 @@ const Home = () => {
 
       <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 px-8 md:px-16 py-10 max-w-7xl mx-auto">
         {/* LOXEDEX BOOK */}
-        <button onClick={() => navigate("/loxedex")} data-testid="open-loxedex"
+        <button onClick={() => { playChi(); setTimeout(() => navigate("/loxedex"), 220); }} data-testid="open-loxedex"
           className="group relative aspect-[3/4] parchment parchment-edge rounded-md overflow-hidden text-left transition-transform hover:-translate-y-2 hover:rotate-[-1deg]">
           <div className="absolute left-0 top-0 bottom-0 w-4" style={{ background: "linear-gradient(180deg,#4a3018,#1c0c04)" }} />
           <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
@@ -84,7 +87,7 @@ const Home = () => {
         </button>
 
         {/* GAME BOX */}
-        <button onClick={() => navigate("/games")} data-testid="open-games"
+        <button onClick={() => { playChi(); setTimeout(() => navigate("/games"), 220); }} data-testid="open-games"
           className="group relative aspect-[3/4] rounded-md overflow-hidden text-left transition-transform hover:-translate-y-2 hover:rotate-[-1deg]"
           style={{ background: "linear-gradient(180deg, #3d2510 0%, #1c0e06 100%)", border: "2px solid #8C7356" }}>
           <div className="absolute inset-0 opacity-50" style={{
@@ -100,7 +103,7 @@ const Home = () => {
       </div>
 
       <SaolaGuide context="user is on home/desk page" />
-    </div>
+    </motion.div>
   );
 };
 

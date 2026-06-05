@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import { fetchAnimal } from "../lib/api";
 import { getWikiImage } from "../lib/wikiImage";
+import { playUnlock } from "../lib/sfx";
+import { setSaolaMood } from "../lib/saolaBus";
 import SaolaGuide from "../components/SaolaGuide";
 
 const Stat = ({ label, value, max = 10 }) => (
@@ -30,12 +33,20 @@ const AnimalDetail = () => {
     if (animal) getWikiImage(animal.wiki).then(setImg);
   }, [animal]);
 
+  useEffect(() => {
+    if (animal && isUnlock && animal.rarity === 5) {
+      playUnlock();
+      setSaolaMood("lanternFlare", 2400);
+    }
+  }, [animal, isUnlock]);
+
   if (!animal) return (
     <div className="min-h-screen flex items-center justify-center text-[#FFD700] font-['Pirata_One'] text-2xl">Loading…</div>
   );
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--color-desk)" }} data-testid="animal-detail">
+    <motion.div className="min-h-screen" style={{ background: "var(--color-desk)" }} data-testid="animal-detail"
+      initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
       <div className="max-w-5xl mx-auto px-6 py-6">
         <button onClick={() => navigate(-1)} className="btn-wood mb-4" data-testid="animal-back">← Back</button>
         <div className={`parchment parchment-edge rounded-lg p-6 md:p-10 ${isUnlock ? "burn-in" : "unroll"}`}>
@@ -69,7 +80,7 @@ const AnimalDetail = () => {
         </div>
       </div>
       <SaolaGuide context={`viewing ${animal.name}`} />
-    </div>
+    </motion.div>
   );
 };
 

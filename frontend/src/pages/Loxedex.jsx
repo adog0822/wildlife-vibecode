@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import { fetchAnimals } from "../lib/api";
 import AnimalCard from "../components/AnimalCard";
 import SaolaGuide from "../components/SaolaGuide";
 import { unlock as unlockId, getUnlocked } from "../lib/storage";
+import { playUnlock, playUnroll, playChi } from "../lib/sfx";
+import { setSaolaMood } from "../lib/saolaBus";
 
 const REGION_LABELS = {
   savanna: "Sun-Baked Savanna", dunes: "The Great Dunes", canopy: "Emerald Canopy",
@@ -20,6 +23,7 @@ const Loxedex = () => {
   const [unlocked, setUnlocked] = useState(getUnlocked());
 
   useEffect(() => {
+    playUnroll();
     fetchAnimals(region).then((d) => setAnimals(d.animals || []));
   }, [region]);
 
@@ -27,13 +31,16 @@ const Loxedex = () => {
 
   const handleClick = (a) => {
     if (a.rarity <= 2 || unlocked.includes(a.id)) {
+      playChi();
       navigate(`/animal/${a.id}`);
     } else {
       unlockId(a.id);
       setUnlocked(getUnlocked());
+      if (a.rarity === 5) { playUnlock(); setSaolaMood("lanternFlare", 2200); }
+      else { playChi(); setSaolaMood("wideEyes", 1400); }
       document.body.classList.add("shake");
       setTimeout(() => document.body.classList.remove("shake"), 700);
-      setTimeout(() => navigate(`/animal/${a.id}?unlock=1`), 400);
+      setTimeout(() => navigate(`/animal/${a.id}?unlock=1`), 500);
     }
   };
 
@@ -47,7 +54,8 @@ const Loxedex = () => {
   );
 
   return (
-    <div className="min-h-screen w-full" data-testid="loxedex-page" style={{ background: "var(--color-desk)" }}>
+    <motion.div className="min-h-screen w-full" data-testid="loxedex-page" style={{ background: "var(--color-desk)", perspective: "1500px" }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
       <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
         backgroundImage: "url(https://images.unsplash.com/photo-1619976553860-b7ffbe9a093b?auto=format&fit=crop&w=2000&q=80)",
         backgroundSize: "cover", mixBlendMode: "soft-light"
@@ -60,7 +68,12 @@ const Loxedex = () => {
           </button>
         </div>
 
-        <div className="parchment parchment-edge rounded-md p-6 md:p-12 unroll relative">
+        <motion.div
+          initial={{ rotateX: -85, opacity: 0, y: -40 }}
+          animate={{ rotateX: 0, opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          style={{ transformOrigin: "top center", transformStyle: "preserve-3d" }}
+          className="parchment parchment-edge rounded-md p-6 md:p-12 relative">
           {/* corner ornaments */}
           {[
             { c: "top-3 left-3", r: 0 }, { c: "top-3 right-3", r: 90 },
@@ -119,10 +132,10 @@ const Loxedex = () => {
           <div className="text-center font-['Cinzel'] italic text-[#5C5042] text-sm mt-2">
             "Every creature carries a piece of the world's secret."
           </div>
-        </div>
+        </motion.div>
       </div>
       <SaolaGuide context="user is browsing the Loxedex" />
-    </div>
+    </motion.div>
   );
 };
 

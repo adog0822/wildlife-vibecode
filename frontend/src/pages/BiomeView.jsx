@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import { fetchAnimals } from "../lib/api";
 import { getWikiImage } from "../lib/wikiImage";
 import { isUnlocked, unlock } from "../lib/storage";
+import { startAmbient, stopAmbient, playUnlock, playChi } from "../lib/sfx";
+import { setSaolaMood } from "../lib/saolaBus";
 import SaolaGuide from "../components/SaolaGuide";
 
 // Rich painterly scene per biome — vivid Unsplash imagery + atmospheric overlays
@@ -125,18 +128,30 @@ const BiomeView = () => {
   const handlePick = (a) => {
     if (a.rarity >= 3 && !isUnlocked(a.id)) {
       unlock(a.id);
+      if (a.rarity === 5) {
+        playUnlock();
+        setSaolaMood("lanternFlare", 2200);
+      } else {
+        playChi();
+      }
       document.body.classList.add("shake");
       setTimeout(() => document.body.classList.remove("shake"), 700);
-      setTimeout(() => navigate(`/animal/${a.id}?unlock=1`), 400);
+      setTimeout(() => navigate(`/animal/${a.id}?unlock=1`), 500);
     } else {
+      playChi();
       navigate(`/animal/${a.id}`);
     }
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden" data-testid={`biome-${key}`}>
+    <motion.div
+      className="relative min-h-screen w-full overflow-hidden" data-testid={`biome-${key}`}
+      initial={{ opacity: 0, scale: 1.15 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}>
       {/* Hero painted backdrop */}
-      <div className="absolute inset-0 bg-cover bg-center"
+      <motion.div className="absolute inset-0 bg-cover bg-center"
+           initial={{ scale: 1.15 }} animate={{ scale: 1 }} transition={{ duration: 1.4, ease: "easeOut" }}
            style={{ backgroundImage: `url(${biome.bg})`, filter: "saturate(1.2) contrast(1.05)" }} />
       <div className="absolute inset-0" style={{ background: biome.overlay }} />
       <Particles kind={biome.particles} color={biome.accent} />
@@ -219,7 +234,7 @@ const BiomeView = () => {
       </div>
 
       <SaolaGuide context={`exploring the ${biome.label}`} />
-    </div>
+    </motion.div>
   );
 };
 

@@ -1,15 +1,16 @@
 import React, { useEffect, useState, useRef } from "react";
 import { saolaStream } from "../lib/api";
+import { onSaolaMood } from "../lib/saolaBus";
 
 const SAOLA_TIPS = [
   "Welcome, scholar. I am the Saola. Tap me to chat.",
   "Click the map to wander. The book to study. The box to play.",
-  "5-star animals shake the parchment when discovered. Try the rainforest.",
-  "In Ecosystem Poker — even the Wardens must sometimes bluff."
+  "5-star animals shake the parchment when discovered.",
 ];
 
 const SaolaGuide = ({ context = "" }) => {
   const [open, setOpen] = useState(false);
+  const [mood, setMood] = useState("default");
   const [chat, setChat] = useState([{ role: "saola", text: SAOLA_TIPS[0] }]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -18,6 +19,7 @@ const SaolaGuide = ({ context = "" }) => {
 
   useEffect(() => { localStorage.setItem("saola.session", sessionRef.current); }, []);
   useEffect(() => { scrollRef.current?.scrollTo(0, 99999); }, [chat, streaming]);
+  useEffect(() => onSaolaMood(setMood), []);
 
   const send = async () => {
     const msg = input.trim();
@@ -39,6 +41,13 @@ const SaolaGuide = ({ context = "" }) => {
       setStreaming(false);
     }
   };
+
+  // mood-driven visuals
+  const eyeR = mood === "wideEyes" ? 8 : 5.5;
+  const lanternOpacity = mood === "lanternFlare" ? 0.95 : 0.55;
+  const lanternR = mood === "lanternFlare" ? 44 : 28;
+  const armRot = mood === "chinStroke" ? -25 : 0;
+  const armVisible = mood === "chinStroke";
 
   return (
     <div className="fixed bottom-4 right-4 z-50 select-none" data-testid="saola-guide">
@@ -76,19 +85,28 @@ const SaolaGuide = ({ context = "" }) => {
         onClick={() => setOpen((o) => !o)}
         className="relative w-24 h-24 md:w-28 md:h-28 float-y cursor-pointer"
         aria-label="Saola Guide"
+        title={mood !== "default" ? `Saola: ${mood}` : "Saola"}
       >
-        {/* Saola SVG character */}
         <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-[0_8px_24px_rgba(255,140,0,0.5)]">
-          {/* lantern glow */}
-          <circle cx="160" cy="135" r="28" fill="#FFD700" opacity="0.55" className="glow-pulse" />
+          {/* lantern glow with mood */}
+          <circle cx="160" cy="135" r={lanternR} fill="#FFD700" opacity={lanternOpacity}
+                  className={mood === "lanternFlare" ? "" : "glow-pulse"}>
+            {mood === "lanternFlare" && (
+              <animate attributeName="r" values="28;55;28" dur="0.6s" repeatCount="3" />
+            )}
+          </circle>
           {/* head */}
           <ellipse cx="100" cy="95" rx="45" ry="50" fill="#3a2418" stroke="#1a0f08" strokeWidth="2" />
           {/* white face stripes */}
           <path d="M75 70 L70 130" stroke="#f4efe6" strokeWidth="6" strokeLinecap="round" />
           <path d="M125 70 L130 130" stroke="#f4efe6" strokeWidth="6" strokeLinecap="round" />
           {/* eyes */}
-          <ellipse cx="85" cy="95" rx="5" ry="6" fill="#1a0f08" />
-          <ellipse cx="115" cy="95" rx="5" ry="6" fill="#1a0f08" />
+          <ellipse cx="85" cy="95" rx={eyeR} ry={eyeR + 1} fill="#1a0f08">
+            {mood === "wideEyes" && <animate attributeName="ry" values="6;10;6" dur="0.4s" repeatCount="3" />}
+          </ellipse>
+          <ellipse cx="115" cy="95" rx={eyeR} ry={eyeR + 1} fill="#1a0f08">
+            {mood === "wideEyes" && <animate attributeName="ry" values="6;10;6" dur="0.4s" repeatCount="3" />}
+          </ellipse>
           <circle cx="86" cy="93" r="1.5" fill="#FFD700" />
           <circle cx="116" cy="93" r="1.5" fill="#FFD700" />
           {/* nose */}
@@ -96,6 +114,14 @@ const SaolaGuide = ({ context = "" }) => {
           {/* horns */}
           <path d="M78 55 Q70 30 65 15" stroke="#1a0f08" strokeWidth="4" fill="none" strokeLinecap="round" />
           <path d="M122 55 Q130 30 135 15" stroke="#1a0f08" strokeWidth="4" fill="none" strokeLinecap="round" />
+          {/* hand stroking chin (only when chinStroke) */}
+          {armVisible && (
+            <g transform={`translate(95, 138) rotate(${armRot})`}>
+              <path d="M0 0 Q15 -5 25 -18" stroke="#3a2418" strokeWidth="6" fill="none" strokeLinecap="round" />
+              <circle cx="25" cy="-18" r="6" fill="#3a2418" />
+              <animate attributeName="opacity" values="0;1;1;0" dur="1.8s" />
+            </g>
+          )}
           {/* bamboo staff */}
           <line x1="155" y1="50" x2="170" y2="180" stroke="#6e4c2c" strokeWidth="4" strokeLinecap="round" />
           <line x1="158" y1="80" x2="167" y2="80" stroke="#4a3018" strokeWidth="2" />
@@ -104,6 +130,12 @@ const SaolaGuide = ({ context = "" }) => {
           <rect x="148" y="120" width="24" height="30" rx="3" fill="#FFD700" stroke="#8C7356" strokeWidth="2" />
           <rect x="153" y="128" width="14" height="18" fill="#FF8C00" opacity="0.8" />
         </svg>
+        {/* mood label puff */}
+        {mood !== "default" && (
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#FFD700] text-[#1a0d00] text-[10px] font-['Bebas_Neue'] tracking-widest px-2 py-0.5 rounded shadow-md whitespace-nowrap">
+            {mood === "chinStroke" ? "HMMMM…" : mood === "lanternFlare" ? "OH MY!" : "!!!"}
+          </div>
+        )}
       </button>
     </div>
   );

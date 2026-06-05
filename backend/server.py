@@ -161,12 +161,25 @@ class PokerRoom:
         return list(self.players.keys())
 
     def deal(self):
-        for pid in self.players:
-            hand = random.sample(ANIMALS, 7)
-            # 1 spirit tile per player
-            spirit = {"id":"spirit-mimic","name":"The Mimic","rarity":4,"is_spirit":True,
-                       "wiki":"Chameleon","superpower":"Substitute any demand, but +0 harmony.","region":"any"}
-            hand.append(spirit)
+        # spirit tile templates
+        spirit_pool = [
+            {"id":"spirit-mimic","name":"The Mimic","rarity":4,"is_spirit":True,"spirit_kind":"mimic",
+             "wiki":"Chameleon","superpower":"Substitute any demand (+0 harmony).","region":"any"},
+            {"id":"spirit-oracle","name":"The Oracle","rarity":4,"is_spirit":True,"spirit_kind":"oracle",
+             "wiki":"Owl","superpower":"Play face-up to instantly reveal all face-down tiles on the board.","region":"any"},
+            {"id":"spirit-parasite","name":"The Parasite","rarity":5,"is_spirit":True,"spirit_kind":"parasite",
+             "wiki":"Cuscuta","superpower":"Played face-down. +20 harmony now, but drains -40 at reveal.","region":"any"},
+            {"id":"spirit-scavenger","name":"The Scavenger","rarity":3,"is_spirit":True,"spirit_kind":"scavenger",
+             "wiki":"Vulture","superpower":"Play face-up to swap in for the last shattered tile.","region":"any"},
+        ]
+        for i, pid in enumerate(self.players):
+            hand = random.sample(ANIMALS, 6)
+            # give each player 1–2 random spirit tiles (unique-ish per player)
+            spirits = random.sample(spirit_pool, k=2)
+            for sp in spirits:
+                # Make unique id per player so frontend tracks them separately
+                hand.append({**sp, "id": f"{sp['id']}-{pid[:6]}"})
+            random.shuffle(hand)
             self.players[pid]["hand"] = hand
 
     def assign_saboteur(self):
@@ -308,10 +321,56 @@ async def ws_poker(websocket: WebSocket, code: str):
                     await websocket.send_json({"type":"error","message":"Tile not in hand"})
                     continue
                 actual = hand.pop(idx)
+                kind = actual.get("spirit_kind")
+
+                # Oracle: face-up, reveals all face-down tiles, no challenge
+                if kind == "oracle":
+                    for tile in room.board:
+                        tile["revealed"] = True
+                    if room.pending_play:
+                        room.pending_play["forced_reveal"] = True
+                    room.board.append({"player_id": player_id, "claim": "Oracle: Reveal all!",
+                                       "actual": actual, "revealed": True, "result": "oracle"})
+                    room.log.append(f"{room.players[player_id]['name']} plays THE ORACLE — all tiles flip!")
+                    # advance turn
+                    room.current_player_index = (room.current_player_index + 1) % len(room.players)
+                    if room.current_player_index == 0:
+                        room.round_number += 1
+                        if room.round_number > room.max_rounds: room.state = "finished"
+                        else: room.next_demand()
+                    await broadcast(room)
+                    continue
+
+                # Scavenger: revive last splintered tile slot (simplified: small heal)
+                if kind == "scavenger":
+                    room.harmony = min(100, room.harmony + 8)
+                    room.board.append({"player_id": player_id, "claim": "Scavenger: cleanse the splinters",
+                                       "actual": actual, "revealed": True, "result": "scavenger"})
+                    room.log.append(f"{room.players[player_id]['name']} plays THE SCAVENGER — the ecosystem mends (+8 harmony).")
+                    room.current_player_index = (room.current_player_index + 1) % len(room.players)
+                    if room.current_player_index == 0:
+                        room.round_number += 1
+                        if room.round_number > room.max_rounds: room.state = "finished"
+                        else: room.next_demand()
+                    await broadcast(room)
+                    continue
+
+                # Parasite: face-down, +20 now, -40 on reveal
+                if kind == "parasite":
+                    room.harmony = min(100, room.harmony + 20)
+                    room.pending_play = {"player_id": player_id, "claim": claim_label, "actual": actual,
+                                         "challenges": set(), "parasite_pending": True}
+                    room.log.append(f"{room.players[player_id]['name']} slides a tile face-down: \"{claim_label}\" — the ecosystem swells deceptively…")
+                    await broadcast(room)
+                    async def resolve_after_window(r=room):
+                        await asyncio.sleep(10)
+                        await resolve_play(r)
+                    room.challenge_window_task = asyncio.create_task(resolve_after_window())
+                    continue
+
                 room.pending_play = {"player_id": player_id, "claim": claim_label, "actual": actual, "challenges": set()}
                 room.log.append(f"{room.players[player_id]['name']} slides a tile face-down: \"{claim_label}\"")
                 await broadcast(room)
-                # 10s window
                 async def resolve_after_window(r=room):
                     await asyncio.sleep(10)
                     await resolve_play(r)
@@ -372,7 +431,13 @@ async def resolve_play(room: PokerRoom):
             room.log.append(f"A hidden corruption seeps into the ecosystem...")
 
     if actual.get("is_spirit"):
-        delta = 0  # Mimic adds zero
+        if actual.get("spirit_kind") == "parasite":
+            # Parasite punishes at reveal
+            delta = -40
+            result = "parasite_drain"
+            room.log.append(f"THE PARASITE blooms — vines choke the harmony (-40).")
+        else:
+            delta = 0  # Mimic etc add zero
     # invasive bonus drain
     if actual.get("invasive", 0) >= 4 and not actual.get("is_spirit"):
         delta -= 5

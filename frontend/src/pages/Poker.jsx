@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import { createPokerRoom, wsURL } from "../lib/api";
 import { getPlayerName, setPlayerName } from "../lib/storage";
 import { getWikiImage } from "../lib/wikiImage";
+import { playTileClack, playChi, playSplinter, playUnlock } from "../lib/sfx";
+import { setSaolaMood } from "../lib/saolaBus";
 import SaolaGuide from "../components/SaolaGuide";
 
 const PokerLobby = () => {
@@ -62,7 +65,30 @@ export const PokerGame = () => {
     };
     ws.onmessage = (e) => {
       const m = JSON.parse(e.data);
-      if (m.type === "state") setState(m.state);
+      if (m.type === "state") {
+        const prev = state;
+        setState(m.state);
+        // SFX cues based on state diff
+        if (prev) {
+          const prevBoard = prev.board?.length || 0;
+          const newBoard = m.state.board?.length || 0;
+          if (newBoard > prevBoard) {
+            const newest = m.state.board[newBoard - 1];
+            if (newest?.result === "exposed_lie" || newest?.result === "parasite_drain") {
+              playSplinter();
+            } else if (newest?.result === "oracle" || newest?.result === "truthful") {
+              playUnlock();
+            } else {
+              playTileClack();
+            }
+          } else if (!prev.pending_play && m.state.pending_play) {
+            playTileClack();
+          }
+          if ((m.state.harmony || 0) < (prev.harmony || 100) - 10) {
+            setSaolaMood("wideEyes", 1400);
+          }
+        }
+      }
       if (m.type === "error") console.warn(m.message);
     };
     ws.onclose = () => {};
@@ -83,10 +109,15 @@ export const PokerGame = () => {
   const start = () => send({ type: "start" });
   const playTile = () => {
     if (!pickedTile || !claim.trim()) return;
+    // chin-stroke saola when the player is about to play something risky (low rarity but high claim, or spirit)
+    if (pickedTile.is_spirit || (state.demand?.kind === "rarity" && pickedTile.rarity !== state.demand.value)) {
+      setSaolaMood("chinStroke", 1600);
+    }
+    playTileClack();
     send({ type: "play", tile_id: pickedTile.id, claim });
     setPickedTile(null); setClaim("");
   };
-  const challenge = () => send({ type: "challenge" });
+  const challenge = () => { playChi(); send({ type: "challenge" }); };
 
   if (!state) return <div className="min-h-screen flex items-center justify-center text-[#FFD700] font-['Pirata_One'] text-2xl">Connecting to the lodge…</div>;
 
