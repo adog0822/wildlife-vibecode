@@ -33,7 +33,17 @@ EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
 app = FastAPI()
 
 # ============== RATE LIMITING (slowapi) ==============
-limiter = Limiter(key_func=get_remote_address)
+# Real client IP lives in X-Forwarded-For behind Kubernetes ingress.
+def get_real_ip(request: Request) -> str:
+    fwd = request.headers.get("X-Forwarded-For")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    real = request.headers.get("X-Real-IP")
+    if real:
+        return real.strip()
+    return get_remote_address(request)
+
+limiter = Limiter(key_func=get_real_ip)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
