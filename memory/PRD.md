@@ -118,8 +118,15 @@ test their knowledge in trials, and bluff their way through cocktail-party multi
 - ✅ Mid Unsplash overlay opacity dropped to 0.14 (from 0.22) when AI bg present — lets painterly art shine through
 - ✅ Smoke-tested savanna (golden hour) + ocean (deep blue painterly) — both render with cinematic depth
 
+## Iteration 9 (2026-02-05 — Universal Key Topped Up + Poker Post-Lobby Polish)
+- ✅ **Saola Chat LIVE** — user topped up Universal Key. Verified via curl + frontend (testing agent iter1): real Claude Sonnet 4.5 streamed in-character responses ("*taps bamboo staff thoughtfully* The savanna is a golden-grass stage…").
+- ✅ **Ecosystem Poker post-lobby polish (light)**:
+  - `RESULT_META` mapping → readable result chips (TRUTHFUL / EXPOSED LIE / PASSED · TRUE / PASSED · LIE / PARASITE DRAIN / ORACLE SIGHT) with themed colors + icons
+  - Board tiles now animate in with framer-motion `rotateY/scale` flip + colored box-shadow halo matching result type (e.g., red glow on EXPOSED LIE, gold on ORACLE SIGHT)
+  - New "⟁ YOUR TURN — pick a tile & slide it face-down ⟁" pulse banner shows for the active player during `playing` state
+- ✅ Testing agent verified backend + frontend 100% pass. Backend pytest at `/app/backend/tests/test_saola_chat.py`.
+
 ## Pending / Next Up
-- 🟠 **Top up Universal Key** so Saola can actually speak (Profile → Universal Key → Add Balance). Code is 100% ready.
-- 🟡 Field Journalist Missions (LLM photo prompts in Photo Mode) — requires budget
-- 🟢 Ecosystem Poker post-lobby gameplay polish (bluff reveal, board sync)
-- 🧹 Refactor `BiomeView.jsx` (now ~770 lines) into `BiomeCanvas`, `PhotoMode`, `DayNightController`, `BiomeAudio`
+- 🟡 Field Journalist Missions (LLM photo prompts in Photo Mode) — **deferred at user's request**
+- 🧹 Refactor `Poker.jsx` (~382 lines) and `server.py` (~590 lines: split poker logic to `poker.py`)
+- 🚀 User intends to publish/deploy with remaining 50 credits
