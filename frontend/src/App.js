@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import "@/App.css";
 
 import Home from "@/pages/Home";
@@ -10,12 +11,24 @@ import Games from "@/pages/Games";
 import Singleplayer from "@/pages/Singleplayer";
 import PokerLobby, { PokerGame } from "@/pages/Poker";
 import ScholarLeaderboard from "@/pages/ScholarLeaderboard";
+import Analytics from "@/pages/Analytics";
 import MuteToggle from "@/components/MuteToggle";
+import { track } from "@/lib/track";
+
+// Fires a page_view on every route change. Mounted inside BrowserRouter.
+function RouteTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    track("page_view");
+  }, [location.pathname]);
+  return null;
+}
 
 function App() {
   return (
     <div className="App">
       <BrowserRouter>
+        <RouteTracker />
         <MuteToggle />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -29,6 +42,7 @@ function App() {
           <Route path="/scholar/leaderboard" element={<ScholarLeaderboard />} />
           <Route path="/poker" element={<PokerLobby />} />
           <Route path="/poker/:code" element={<PokerGame />} />
+          <Route path="/admin/analytics" element={<Analytics />} />
         </Routes>
       </BrowserRouter>
     </div>

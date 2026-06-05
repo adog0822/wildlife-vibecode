@@ -149,3 +149,16 @@ test their knowledge in trials, and bluff their way through cocktail-party multi
 - 🟡 Field Journalist Missions (LLM photo prompts in Photo Mode) — **deferred at user's request**
 - 🧹 Refactor `Poker.jsx` (~382 lines) and `server.py` (~590 lines: split poker logic to `poker.py`)
 - 🚀 User intends to publish/deploy with remaining 50 credits
+
+## Iteration 11 (2026-02-05 — slowapi Rate Limiting + Lite Analytics)
+- ✅ **Rate limiting (slowapi)** — installed via pip, frozen into requirements.txt. Limits applied:
+  - `POST /api/saola/chat` → **5/minute**
+  - `POST /api/biome_bg/regenerate/{biome_key}` → **2/minute**
+  - `POST /api/track` → **60/minute** (analytics ingest)
+  - Custom `get_real_ip` key_func reads `X-Forwarded-For` (then `X-Real-IP`, then peer) so rate limits work correctly behind Kubernetes ingress.
+  - Verified: 6th saola request → HTTP 429 `{"error":"Rate limit exceeded: 5 per 1 minute"}`. 3rd regen → HTTP 429.
+- ✅ **Lite Analytics** (zero third-party, anonymous, first-party):
+  - Backend: `POST /api/track` (session_id, event, path, meta) inserts to `db.events`. `GET /api/analytics/summary?key=ANALYTICS_KEY` returns aggregates (total events, unique sessions, today/7d/30d active, top biomes, top animals, events by type).
+  - Frontend: `/lib/track.js` helper with auto-generated session id in localStorage. `RouteTracker` fires `page_view` on every route change. Targeted events: `biome_enter` (BiomeView), `animal_view` (AnimalDetail), `scholar_round` (Singleplayer), `saola_chat` (SaolaGuide), `poker_game_start` (Poker lobby host/join).
+  - Admin dashboard at `/admin/analytics` gated by `ANALYTICS_KEY` (stored in `/app/backend/.env`; persisted in localStorage after first unlock). Key recorded in `/app/memory/test_credentials.md`.
+  - Verified: 401 on bad key, full aggregates rendered on good key (savanna entered, tiger viewed, etc.).

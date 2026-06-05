@@ -7,6 +7,7 @@ import { getWikiImage } from "../lib/wikiImage";
 import { playUnlock } from "../lib/sfx";
 import { setSaolaMood } from "../lib/saolaBus";
 import { completeQuest } from "../lib/dailyQuest";
+import { track } from "../lib/track";
 import SaolaGuide from "../components/SaolaGuide";
 
 const Stat = ({ label, value, max = 10 }) => (
@@ -31,6 +32,7 @@ const AnimalDetail = () => {
 
   useEffect(() => { fetchAnimal(id).then(setAnimal); }, [id]);
   useEffect(() => { if (animal) getWikiImage(animal.wiki).then(setImg); }, [animal]);
+  useEffect(() => { if (animal) track("animal_view", { animal_id: animal.id, name: animal.name, rarity: animal.rarity, region: animal.region }); }, [animal]);
 
   useEffect(() => {
     if (animal && isUnlock) {

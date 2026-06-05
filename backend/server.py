@@ -162,6 +162,85 @@ async def submit_leaderboard(sub: LeaderboardSubmission):
     return {"submitted": doc, "top": top}
 
 
+# ============== ANALYTICS (LITE — first-party, anonymous) ==============
+
+ANALYTICS_KEY = os.environ.get("ANALYTICS_KEY", "")
+
+class TrackEvent(BaseModel):
+    session_id: str
+    event: str            # "page_view" | "biome_enter" | "animal_view" | "scholar_round" | "saola_chat" | "poker_game_start" | etc.
+    path: Optional[str] = None
+    meta: Optional[Dict[str, Any]] = None
+
+@api_router.post("/track")
+@limiter.limit("60/minute")
+async def track_event(request: Request, ev: TrackEvent):
+    doc = {
+        "session_id": ev.session_id[:64],
+        "event": ev.event[:48],
+        "path": (ev.path or "")[:200],
+        "meta": ev.meta or {},
+        "ip_hash": str(hash(get_real_ip(request)))[:16],
+        "at": datetime.now(timezone.utc),
+    }
+    await db["events"].insert_one(doc)
+    return {"ok": True}
+
+def _require_admin(key: Optional[str]):
+    if not ANALYTICS_KEY or key != ANALYTICS_KEY:
+        raise HTTPException(status_code=401, detail="Invalid analytics key")
+
+@api_router.get("/analytics/summary")
+async def analytics_summary(key: str):
+    _require_admin(key)
+    now = datetime.now(timezone.utc)
+    day_ago    = now.timestamp() - 86400
+    week_ago   = now.timestamp() - 86400 * 7
+    month_ago  = now.timestamp() - 86400 * 30
+    coll = db["events"]
+
+    total_events = await coll.count_documents({})
+    unique_sessions = len(await coll.distinct("session_id"))
+
+    async def _active(since_ts: float) -> int:
+        since_iso = datetime.fromtimestamp(since_ts, tz=timezone.utc)
+        sessions = await coll.distinct("session_id", {"at": {"$gte": since_iso}})
+        return len(sessions)
+
+    today_active = await _active(day_ago)
+    week_active  = await _active(week_ago)
+    month_active = await _active(month_ago)
+
+    async def _top(event: str, meta_key: str, limit: int = 5):
+        pipeline = [
+            {"$match": {"event": event, f"meta.{meta_key}": {"$ne": None}}},
+            {"$group": {"_id": f"$meta.{meta_key}", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+            {"$limit": limit},
+        ]
+        return [{"key": d["_id"], "count": d["count"]} async for d in coll.aggregate(pipeline)]
+
+    top_biomes  = await _top("biome_enter", "biome")
+    top_animals = await _top("animal_view", "animal_id")
+
+    # event totals by type
+    pipeline = [
+        {"$group": {"_id": "$event", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+    ]
+    events_by_type = [{"event": d["_id"], "count": d["count"]} async for d in coll.aggregate(pipeline)]
+
+    return {
+        "total_events": total_events,
+        "unique_sessions": unique_sessions,
+        "active": {"today": today_active, "week": week_active, "month": month_active},
+        "top_biomes": top_biomes,
+        "top_animals": top_animals,
+        "events_by_type": events_by_type,
+        "generated_at": now.isoformat(),
+    }
+
+
 
 # ============== SAOLA AI CHAT ==============
 

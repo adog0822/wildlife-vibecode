@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { saolaStream } from "../lib/api";
 import { onSaolaMood } from "../lib/saolaBus";
+import { track } from "../lib/track";
 
 const SAOLA_TIPS = [
   "Welcome, scholar. I am the Saola. Tap me to chat.",
@@ -24,6 +25,7 @@ const SaolaGuide = ({ context = "" }) => {
   const send = async () => {
     const msg = input.trim();
     if (!msg || streaming) return;
+    track("saola_chat", { len: msg.length });
     setChat((c) => [...c, { role: "user", text: msg }, { role: "saola", text: "" }]);
     setInput("");
     setStreaming(true);

@@ -6,6 +6,7 @@ import { getPlayerName, setPlayerName } from "../lib/storage";
 import { getWikiImage } from "../lib/wikiImage";
 import { playTileClack, playChi, playSplinter, playUnlock } from "../lib/sfx";
 import { setSaolaMood } from "../lib/saolaBus";
+import { track } from "../lib/track";
 import SaolaGuide from "../components/SaolaGuide";
 
 // Readable bluff-result labels + theme colors for tile reveal
@@ -26,11 +27,13 @@ const PokerLobby = () => {
     if (!name.trim()) return;
     setPlayerName(name);
     const { code: c } = await createPokerRoom();
+    track("poker_game_start", { mode: "host", code: c });
     navigate(`/poker/${c}`);
   };
   const join = () => {
     if (!name.trim() || !code.trim()) return;
     setPlayerName(name);
+    track("poker_game_start", { mode: "join", code: code.toUpperCase() });
     navigate(`/poker/${code.toUpperCase()}`);
   };
 

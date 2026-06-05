@@ -7,6 +7,7 @@ import { getWikiImage } from "../lib/wikiImage";
 import { isUnlocked, unlock } from "../lib/storage";
 import { startAmbient, stopAmbient, playUnlock, playChi, playFootstep, playAnimalCall } from "../lib/sfx";
 import { setSaolaMood } from "../lib/saolaBus";
+import { track } from "../lib/track";
 import SaolaGuide from "../components/SaolaGuide";
 
 // Hi-res Unsplash backdrops (sharp). AI-generated painterly bgs from backend override these when available.
@@ -223,6 +224,7 @@ const BiomeView = () => {
   const { key } = useParams();
   const navigate = useNavigate();
   const biome = BIOMES[key] || BIOMES.savanna;
+  useEffect(() => { track("biome_enter", { biome: key }); }, [key]);
   const [animals, setAnimals] = useState([]);
   const [revealed, setRevealed] = useState(null);
   const [discovered, setDiscovered] = useState(new Set());

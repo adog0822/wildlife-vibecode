@@ -6,6 +6,7 @@ import { getWikiImage } from "../lib/wikiImage";
 import { playDing, playWrong, playChi } from "../lib/sfx";
 import { setSaolaMood } from "../lib/saolaBus";
 import { getPlayerName } from "../lib/storage";
+import { track } from "../lib/track";
 import SaolaGuide from "../components/SaolaGuide";
 
 const BEST_KEY = "scholar.best";
@@ -66,6 +67,7 @@ const Singleplayer = () => {
           setBest(finalScore); setBestState(finalScore); setNewRecord(true);
         }
         recordScore(finalScore);
+        track("scholar_round", { score: finalScore });
         // Submit to global leaderboard (fire-and-forget)
         if (finalScore > 0) {
           const playerName = getPlayerName() || "Anonymous Scholar";
