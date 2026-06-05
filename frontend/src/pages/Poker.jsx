@@ -126,27 +126,27 @@ export const PokerGame = () => {
 
   return (
     <div className={`min-h-screen biome-${state.biome}`} data-testid="poker-game">
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={() => navigate("/poker")} className="btn-wood" data-testid="game-leave">← Leave</button>
-          <div className="text-center">
-            <div className="font-['Pirata_One'] text-3xl md:text-4xl text-[#FFD700]" style={{ textShadow: "0 0 14px rgba(255,140,0,0.6)" }}>{state.biome_label}</div>
-            <div className="font-['Space_Mono'] text-xs tracking-widest text-[#f4efe6]/70">ROOM {state.code} · ROUND {state.round}/{state.max_rounds}</div>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+        <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+          <button onClick={() => navigate("/poker")} className="btn-wood text-xs sm:text-sm" data-testid="game-leave">← Leave</button>
+          <div className="text-center min-w-0">
+            <div className="font-['Pirata_One'] text-xl sm:text-3xl md:text-4xl text-[#FFD700] truncate" style={{ textShadow: "0 0 14px rgba(255,140,0,0.6)" }}>{state.biome_label}</div>
+            <div className="font-['Space_Mono'] text-[10px] sm:text-xs tracking-widest text-[#f4efe6]/70">ROOM {state.code} · ROUND {state.round}/{state.max_rounds}</div>
           </div>
           <div className="text-right">
-            <div className="font-['Bebas_Neue'] tracking-widest text-[#FFD700] text-sm">HARMONY</div>
-            <div className="w-40 h-3 bg-black/40 rounded overflow-hidden" data-testid="harmony-meter">
+            <div className="font-['Bebas_Neue'] tracking-widest text-[#FFD700] text-[10px] sm:text-sm">HARMONY</div>
+            <div className="w-24 sm:w-40 h-3 bg-black/40 rounded overflow-hidden" data-testid="harmony-meter">
               <div className="h-full bg-gradient-to-r from-[#4ADE80] via-[#FFD700] to-[#FF8C00]" style={{ width: `${state.harmony}%` }} />
             </div>
-            <div className="text-[#f4efe6] text-xs font-['Space_Mono']">{state.harmony}%</div>
+            <div className="text-[#f4efe6] text-[10px] sm:text-xs font-['Space_Mono']">{state.harmony}%</div>
           </div>
         </div>
 
         {/* Players */}
         <div className="flex gap-2 mb-3 flex-wrap" data-testid="players-list">
           {state.players.map((p) => (
-            <div key={p.id} className={`px-3 py-1 rounded font-['Bebas_Neue'] tracking-widest text-sm ${p.id===state.current_player_id ? "bg-[#FFD700] text-black" : "bg-black/40 text-[#f4efe6]"}`}>
-              {p.name}{p.is_host ? " 👑" : ""} · {p.hand_size} tiles
+            <div key={p.id} className={`px-3 py-1 rounded font-['Bebas_Neue'] tracking-widest text-xs sm:text-sm ${p.id===state.current_player_id ? "bg-[#FFD700] text-black" : "bg-black/40 text-[#f4efe6]"}`}>
+              {p.name}{p.is_host ? " 👑" : ""}{p.eclipse_armed ? " ☽" : ""} · {p.hand_size} tiles
             </div>
           ))}
         </div>
@@ -170,9 +170,9 @@ export const PokerGame = () => {
             {/* Board tiles */}
             <div className="mb-4">
               <div className="font-['Bebas_Neue'] tracking-widest text-sm text-[#f4efe6]/80 mb-2">ECOSYSTEM</div>
-              <div className="flex gap-2 flex-wrap" data-testid="board-tiles">
+              <div className="flex gap-2 overflow-x-auto sm:flex-wrap" data-testid="board-tiles">
                 {state.board.map((t, i) => (
-                  <div key={i} className={`wood-tile ${t.revealed && t.actual ? `wood-tile-${t.actual.rarity}` : "wood-tile-3"} p-2 w-28`}>
+                  <div key={i} className={`wood-tile ${t.revealed && t.actual ? `wood-tile-${t.actual.rarity}` : "wood-tile-3"} p-2 w-24 sm:w-28 shrink-0`}>
                     <div className="text-[10px] text-[#f4efe6]/70">{t.player_name} claimed:</div>
                     <div className="font-['Pirata_One'] text-sm text-[#f4efe6]">{t.claim}</div>
                     {t.revealed && t.actual ? (
@@ -186,7 +186,7 @@ export const PokerGame = () => {
                   </div>
                 ))}
                 {state.pending_play && (
-                  <div className="wood-tile wood-tile-3 p-2 w-28 chi-glow" data-testid="pending-tile">
+                  <div className="wood-tile wood-tile-3 p-2 w-24 sm:w-28 chi-glow shrink-0" data-testid="pending-tile">
                     <div className="text-[10px] text-[#f4efe6]/70">{state.pending_play.player_name} slid:</div>
                     <div className="font-['Pirata_One'] text-sm text-[#f4efe6]">{state.pending_play.claim}</div>
                     {canChallenge && (
@@ -203,26 +203,33 @@ export const PokerGame = () => {
                 <div className="font-['Bebas_Neue'] tracking-widest text-sm text-[#f4efe6]/80 mb-2">
                   YOUR RACK {state.is_saboteur ? "· 🜏 The Saboteur" : "· The Warden"}
                 </div>
-                <div className="flex gap-2 flex-wrap" data-testid="my-hand">
+                <div className="flex gap-2 overflow-x-auto pb-2 sm:flex-wrap" data-testid="my-hand">
                   {state.my_hand?.map((t) => (
                     <button key={t.id} onClick={() => myTurn && !state.pending_play && setPickedTile(t)}
                       disabled={!myTurn || state.pending_play}
-                      className={`${t.is_spirit ? "spirit-tile" : `wood-tile wood-tile-${t.rarity}`} p-2 w-28 text-left ${pickedTile?.id===t.id ? "ring-2 ring-[#FFD700] -translate-y-2" : ""} ${(!myTurn||state.pending_play) ? "opacity-50" : ""}`}
+                      className={`${t.is_spirit ? "spirit-tile" : `wood-tile wood-tile-${t.rarity}`} p-2 w-24 sm:w-28 shrink-0 text-left ${pickedTile?.id===t.id ? "ring-2 ring-[#FFD700] -translate-y-2" : ""} ${(!myTurn||state.pending_play) ? "opacity-50" : ""}`}
                       data-testid={`hand-tile-${t.id}`}>
                       <div className="w-full aspect-square bg-black/30 rounded mb-1 overflow-hidden">
                         {imgCache[t.wiki] && <img src={imgCache[t.wiki]} alt={t.name} className="w-full h-full object-cover pyrography" />}
                       </div>
                       <div className={`font-['Pirata_One'] text-xs ${t.is_spirit?"text-[#2c241b]":"text-[#f4efe6]"}`}>{t.name}</div>
                       <div className="text-[10px] text-[#FFD700]">{"★".repeat(t.rarity)}</div>
+                      {t.spirit_kind && <div className="text-[9px] text-[#5C5042] italic mt-0.5">{t.spirit_kind}</div>}
                     </button>
                   ))}
                 </div>
                 {myTurn && pickedTile && !state.pending_play && (
-                  <div className="mt-3 flex gap-2 items-center">
+                  <div className="mt-3 flex gap-2 items-center flex-wrap">
                     <input data-testid="claim-input" value={claim} onChange={(e) => setClaim(e.target.value)}
-                      placeholder={`I am playing a ${state.demand?.label || "creature"}`}
-                      className="flex-1 px-3 py-2 border border-[#8C7356] rounded bg-black/40 text-[#f4efe6] font-['Space_Mono'] text-sm" />
-                    <button onClick={playTile} className="btn-chi" data-testid="slide-btn">Slide Face-Down</button>
+                      placeholder={pickedTile.spirit_kind === "eclipse" ? "Arm The Eclipse (no claim needed)" : `I am playing a ${state.demand?.label || "creature"}`}
+                      className="flex-1 min-w-[180px] px-3 py-2 border border-[#8C7356] rounded bg-black/40 text-[#f4efe6] font-['Space_Mono'] text-sm"
+                      disabled={pickedTile.spirit_kind === "eclipse"} />
+                    <button onClick={() => {
+                      if (pickedTile.spirit_kind === "eclipse") { setClaim("arm"); send({ type: "play", tile_id: pickedTile.id, claim: "Arm Eclipse" }); playTileClack(); setPickedTile(null); setClaim(""); }
+                      else playTile();
+                    }} className="btn-chi" data-testid="slide-btn">
+                      {pickedTile.spirit_kind === "eclipse" ? "☽ Arm Eclipse" : "Slide Face-Down"}
+                    </button>
                   </div>
                 )}
               </div>

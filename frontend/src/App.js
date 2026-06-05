@@ -9,11 +9,13 @@ import AnimalDetail from "@/pages/AnimalDetail";
 import Games from "@/pages/Games";
 import Singleplayer from "@/pages/Singleplayer";
 import PokerLobby, { PokerGame } from "@/pages/Poker";
+import MuteToggle from "@/components/MuteToggle";
 
 function App() {
   return (
     <div className="App">
       <BrowserRouter>
+        <MuteToggle />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/map" element={<WorldMap />} />

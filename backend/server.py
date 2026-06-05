@@ -142,7 +142,7 @@ REGION_LABEL = {
 class PokerRoom:
     def __init__(self, code: str):
         self.code = code
-        self.players: Dict[str, Dict[str, Any]] = {}  # player_id -> {name, hand, sockets, is_saboteur}
+        self.players: Dict[str, Dict[str, Any]] = {}  # player_id -> {name, hand, sockets, is_saboteur, eclipse_armed}
         self.host_id: Optional[str] = None
         self.state = "lobby"  # lobby | playing | reveal | finished
         self.harmony = 100
@@ -171,6 +171,8 @@ class PokerRoom:
              "wiki":"Cuscuta","superpower":"Played face-down. +20 harmony now, but drains -40 at reveal.","region":"any"},
             {"id":"spirit-scavenger","name":"The Scavenger","rarity":3,"is_spirit":True,"spirit_kind":"scavenger",
              "wiki":"Vulture","superpower":"Play face-up to swap in for the last shattered tile.","region":"any"},
+            {"id":"spirit-eclipse","name":"The Eclipse","rarity":4,"is_spirit":True,"spirit_kind":"eclipse",
+             "wiki":"Solar eclipse","superpower":"Arm before sliding a tile. Next challenge against you is blocked; tile stays face-down forever.","region":"any"},
         ]
         for i, pid in enumerate(self.players):
             hand = random.sample(ANIMALS, 6)
@@ -231,7 +233,8 @@ class PokerRoom:
                        "actual": t["actual"] if t["revealed"] else None,
                        "result": t.get("result")} for t in self.board],
             "players":[{"id":pid,"name":p["name"],"hand_size":len(p.get("hand",[])),
-                        "is_host": pid==self.host_id} for pid,p in self.players.items()],
+                        "is_host": pid==self.host_id,
+                        "eclipse_armed": p.get("eclipse_armed", False)} for pid,p in self.players.items()],
             "current_player_id": self.player_order()[self.current_player_index] if self.players else None,
             "pending_play": None if not self.pending_play else {
                 "player_id": self.pending_play["player_id"],
@@ -323,6 +326,14 @@ async def ws_poker(websocket: WebSocket, code: str):
                 actual = hand.pop(idx)
                 kind = actual.get("spirit_kind")
 
+                # Eclipse: arm protection (consume tile, set flag)
+                if kind == "eclipse":
+                    room.players[player_id]["eclipse_armed"] = True
+                    room.log.append(f"{room.players[player_id]['name']} ARMS THE ECLIPSE — the next challenge will be blocked.")
+                    # do not advance turn — just consume Eclipse
+                    await broadcast(room)
+                    continue
+
                 # Oracle: face-up, reveals all face-down tiles, no challenge
                 if kind == "oracle":
                     for tile in room.board:
@@ -379,9 +390,19 @@ async def ws_poker(websocket: WebSocket, code: str):
             elif t == "challenge" and room.pending_play and player_id:
                 if player_id == room.pending_play["player_id"]:
                     continue
+                # Eclipse blocks the challenge entirely
+                claimer = room.pending_play["player_id"]
+                if room.players.get(claimer, {}).get("eclipse_armed"):
+                    room.players[claimer]["eclipse_armed"] = False
+                    room.log.append(f"☽ THE ECLIPSE devours the challenge — {room.players[player_id]['name']} cannot accuse!")
+                    if room.challenge_window_task: room.challenge_window_task.cancel()
+                    # treat as unchallenged (tile stays face-down forever)
+                    room.pending_play["challenges"] = set()
+                    room.pending_play["eclipse_locked"] = True
+                    await resolve_play(room)
+                    continue
                 room.pending_play["challenges"].add(player_id)
                 room.log.append(f"{room.players[player_id]['name']} CHALLENGES the play!")
-                # cancel timer and resolve immediately
                 if room.challenge_window_task:
                     room.challenge_window_task.cancel()
                 await resolve_play(room)
@@ -403,10 +424,11 @@ async def resolve_play(room: PokerRoom):
         return
     play = room.pending_play
     actual = play["actual"]
+    eclipse_locked = play.get("eclipse_locked", False)
     is_true = room.claim_is_true(play["claim"], actual)
     challenged = len(play["challenges"]) > 0
     result = ""
-    revealed = challenged  # only reveal if challenged
+    revealed = challenged and not eclipse_locked
     delta = 0
 
     if challenged:

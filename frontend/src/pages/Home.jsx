@@ -3,13 +3,24 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import SaolaGuide from "../components/SaolaGuide";
 import { playChi } from "../lib/sfx";
+import { fetchAnimals } from "../lib/api";
+import { getUnlocked } from "../lib/storage";
+import { getDailyQuest, isQuestComplete } from "../lib/dailyQuest";
 
 const Home = () => {
   const navigate = useNavigate();
   const [hour, setHour] = useState(new Date().getHours());
+  const [quest, setQuest] = useState(null);
+  const [questDone, setQuestDone] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setHour(new Date().getHours()), 60_000);
+    fetchAnimals().then((d) => {
+      const q = getDailyQuest(d.animals || [], getUnlocked());
+      setQuest(q);
+      if (q) localStorage.setItem("loxedex.lastQuest", JSON.stringify(q));
+      setQuestDone(isQuestComplete());
+    });
     return () => clearInterval(t);
   }, []);
 
@@ -52,6 +63,36 @@ const Home = () => {
           A scholar's desk at the edge of the wild world — open the book, unfurl the atlas, or strike the bamboo.
         </div>
       </div>
+
+      {/* Daily Quest Banner */}
+      {quest && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+          className="relative z-10 mx-auto max-w-3xl mt-4 px-4">
+          <div className="parchment parchment-edge rounded-md px-5 py-3 flex items-center gap-3 unroll"
+               data-testid="daily-quest">
+            <svg viewBox="0 0 24 24" width="32" height="32" className="shrink-0">
+              <circle cx="12" cy="12" r="10" fill="#FFD700" opacity="0.4" />
+              <path d="M12 5 L13.5 10 L19 10.5 L14.7 14 L16.2 19 L12 16 L7.8 19 L9.3 14 L5 10.5 L10.5 10 Z"
+                    fill="#8C2703" />
+            </svg>
+            <div className="flex-1">
+              <div className="font-['Bebas_Neue'] tracking-widest text-xs text-[#8C2703]">
+                THE SAOLA'S DAILY PROPHECY {questDone ? "· COMPLETED" : ""}
+              </div>
+              <div className="font-['Cinzel'] italic text-[#2C241B] text-sm md:text-base leading-snug">
+                "{quest.hint}"
+              </div>
+            </div>
+            <div className="text-right hidden md:block">
+              <div className="text-[#FFD700] text-lg" style={{ textShadow: "0 0 8px #FF8C00" }}>{"★".repeat(quest.rarity)}</div>
+              <div className="font-['Space_Mono'] text-[10px] uppercase text-[#5C5042]">
+                {quest.region} biome
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 px-8 md:px-16 py-10 max-w-7xl mx-auto">
         {/* LOXEDEX BOOK */}

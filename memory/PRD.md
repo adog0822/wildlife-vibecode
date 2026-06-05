@@ -58,3 +58,11 @@ test their knowledge in trials, and bluff their way through cocktail-party multi
 - Audio: ambient biome soundscapes (savanna crickets, rainforest rain, etc.)
 - Shareable Loxedex completion cards
 - Localization
+
+## Iteration 3 (2026-02-05 — Explore + Polish)
+- ✅ **GeoGuessr-style biome exploration**: BiomeView replaced with a 4800px-wide horizontal scene; user drag-pans across; ~15-20 hidden glowing hotspots per biome; tap a hotspot to reveal animal with parchment card; minimap at bottom; idle wildlife flyers (birds, butterflies, fish) crossing the scene; parallax background layers; per-biome ambient soundscape resumes on entry, stops on exit
+- ✅ **Eclipse spirit tile**: backend `arm_eclipse` flow; armed flag visible to all players (☽ badge); next challenge against that player is blocked + tile stays face-down forever
+- ✅ **Mute toggle**: floating speaker icon top-left, persists choice in localStorage, stops/restarts ambient
+- ✅ **Mobile Poker**: hand becomes horizontal-scroll on mobile, header text scales, harmony meter shrinks, board tiles horizontal-scroll
+- ✅ **Daily Quest System**: "The Saola's Daily Prophecy" — seeded by date, picks an undiscovered 4-5★ animal, displays hint banner on Home, auto-marks complete when that animal is unlocked
+- ✅ **Shareable Discovery Card**: html-to-image generates PNG of the unlocked animal page (4★+); web-share API for mobile, falls back to download
